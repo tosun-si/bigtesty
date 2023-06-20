@@ -1,0 +1,25 @@
+{
+  "description": "Test of monitoring data",
+  "scenarios": [
+    {
+      "description": "Nominal case find failure by feature name",
+      "given": [
+        {
+          "input_file_path": "monitoring/given/input_failures_feature_name.json",
+          "destination_dataset": "monitoring",
+          "destination_table": "job_failure"
+        }
+      ],
+      "then": [
+        {
+          "assertion": "row_match",
+          "fields_to_ignore": [
+            "\\[\\d+\\]\\['dwhCreationDate']"
+          ],
+          "actual_file_path": "monitoring/when/find_failures_by_feature_name.sql",
+          "expected_file_path": "monitoring/then/expected_failures_feature_name.json"
+        }
+      ]
+    }
+  ]
+}

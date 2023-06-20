@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+pytest = "==7.2.1"
+deepdiff = "==6.2.3"
+
+[packages]
+dagger-io = "==0.4.0"
+google-cloud-bigquery = "==3.4.2"
+
+[requires]
+python_version = "3.11"

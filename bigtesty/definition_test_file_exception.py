@@ -1,0 +1,2 @@
+class DefinitionTestFileException(Exception):
+    pass

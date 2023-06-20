@@ -1,0 +1,40 @@
+steps:
+  - name: python:3.8.15-slim
+    args: [ 'pip3','install', '-r', 'bigtesty/requirements.txt', '--user' ]
+  #  - name: alpine/terragrunt:1.3.6
+  #    script: |
+  #      terragrunt run-all init
+  #      terragrunt run-all plan --out tfplan.out
+  #      terragrunt run-all apply --terragrunt-non-interactive tfplan.out
+  #    dir: 'bigtesty/infra'
+  #    env:
+  #      - 'TF_VAR_project_id=$PROJECT_ID'
+  #      - 'TF_VAR_env=$_ENV'
+  #      - 'TF_STATE_BUCKET=$_TF_STATE_BUCKET'
+  #      - 'TF_STATE_PREFIX=$_TF_STATE_PREFIX'
+  #      - 'GOOGLE_PROVIDER_VERSION=$_GOOGLE_PROVIDER_VERSION'
+  #      - 'ROOT_TEST_FOLDER=tests'
+  - name: python:3.8.15-slim
+    script: |
+      export PYTHONPATH=$(pwd)/bigtesty
+      python3 -m bigtesty.insertion_test_data_bigquery --project_id=$PROJECT_ID --root_folder=$(pwd)/$ROOT_TEST_FOLDER
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+      - 'TF_VAR_project_id=$PROJECT_ID'
+      - 'TF_VAR_env=$_ENV'
+      - 'TF_STATE_BUCKET=$_TF_STATE_BUCKET'
+      - 'TF_STATE_PREFIX=$_TF_STATE_PREFIX'
+      - 'GOOGLE_PROVIDER_VERSION=$_GOOGLE_PROVIDER_VERSION'
+      - 'ROOT_TEST_FOLDER=tests'
+  - name: python:3.8.15-slim
+    script: |
+      export PYTHONPATH=$(pwd)/bigtesty
+      python3 -m bigtesty.assertion_and_store_report --project_id=$PROJECT_ID --root_folder=$(pwd)/$ROOT_TEST_FOLDER
+    env:
+      - 'PROJECT_ID=$PROJECT_ID'
+      - 'TF_VAR_project_id=$PROJECT_ID'
+      - 'TF_VAR_env=$_ENV'
+      - 'TF_STATE_BUCKET=$_TF_STATE_BUCKET'
+      - 'TF_STATE_PREFIX=$_TF_STATE_PREFIX'
+      - 'GOOGLE_PROVIDER_VERSION=$_GOOGLE_PROVIDER_VERSION'
+      - 'ROOT_TEST_FOLDER=tests'

@@ -1,0 +1,38 @@
+{
+  "description": "Test of monitoring data",
+  "scenarios": [
+    {
+      "description": "Nominal case find failure by job name",
+      "given": [
+        {
+          "input_file_path": "monitoring/given/input_failures_job_name.json",
+          "destination_dataset": "monitoring",
+          "destination_table": "job_failure"
+        }
+      ],
+      "then": [
+        {
+          "assertion": "row_match",
+          "fields_to_ignore": [
+            "\\[\\d+\\]\\['dwhCreationDate']"
+          ],
+          "actual": "SELECT * FROM `monitoring.job_failure` WHERE jobName = 'jobPSG'",
+          "expected": [
+            {
+              "featureName": "myFeature",
+              "jobName": "jobPSG",
+              "pipelineStep": "myPipeline",
+              "inputElement": "myInputElement",
+              "exceptionType": "myExceptionType",
+              "stackTrace": "myStackTrace",
+              "componentType": "myComponentType",
+              "dwhCreationDate": "2022-05-06 17:38:10",
+              "dagOperator": "myDagOperator",
+              "additionalInfo": "info"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

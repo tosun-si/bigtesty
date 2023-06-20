@@ -1,0 +1,22 @@
+[
+  {
+    "datasetId": "monitoring",
+    "datasetRegion": "EU",
+    "datasetFriendlyName": "Monitoring Dataset",
+    "datasetDescription": "Monitoring Dataset description",
+    "tables": [
+      {
+        "tableId": "job_failure",
+        "autodetect": false,
+        "tableSchemaPath": "tests/schema/monitoring/job_failure.json",
+        "partition_type": "DAY",
+        "partition_field": "dwhCreationDate",
+        "clustering": [
+          "featureName",
+          "jobName",
+          "componentType"
+        ]
+      }
+    ]
+  }
+]
