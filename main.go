@@ -30,35 +30,28 @@ func main() {
 	pythonPathKey := "PYTHONPATH"
 
 	projectId := os.Getenv("PROJECT_ID")
-	saEmail := os.Getenv("SA_EMAIL")
 	tfStateBucket := os.Getenv("TF_STATE_BUCKET")
 	tfStatePrefix := os.Getenv("TF_STATE_PREFIX")
 	googleProviderVersion := os.Getenv("GOOGLE_PROVIDER_VERSION")
 	rootTestFolder := os.Getenv("ROOT_TEST_FOLDER")
 	bigTestyInternalPythonPath := "bigtesty"
-	accountFileName := "sa-bigtesty.json"
 
 	if err != nil {
 		panic(err)
 	}
 	defer client.Close()
 
-	activateServiceAccount := []string{
-		"gcloud",
-		"auth",
-		"activate-service-account",
-		saEmail,
-		"--key-file=./secrets/" + accountFileName,
-		"--project=" + projectId,
-	}
-
 	hostSourceDir := client.Host().Directory(".", dagger.HostDirectoryOpts{})
+
+	gcloudConfigSourceDir := client.Host().Directory(
+		os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
+	)
 
 	source := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
 		WithMountedDirectory("/src", hostSourceDir).
+		WithDirectory("/src/config/gcloud", gcloudConfigSourceDir).
 		WithWorkdir("/src").
-		WithExec(activateServiceAccount).
 		Directory(".")
 
 	installPythonPackage := client.Container().
@@ -85,7 +78,7 @@ func main() {
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		WithEnvVariable(accountKey, "/apps/secrets/"+accountFileName).
+		WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
 		WithExec([]string{
 			"terragrunt",
@@ -119,8 +112,7 @@ func main() {
 		WithDirectory(".", installInfra).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		WithExec(activateServiceAccount).
-		WithEnvVariable(accountKey, "./secrets/"+accountFileName).
+		WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", insertingTestDataTablesStep}).
 		WithExec([]string{
 			"python3",
@@ -136,8 +128,7 @@ func main() {
 		WithDirectory(".", insertionTestData).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		WithExec(activateServiceAccount).
-		WithEnvVariable(accountKey, "./secrets/"+accountFileName).
+		WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", assertionActualWithExpectedStep}).
 		WithExec([]string{
 			"python3",
@@ -156,7 +147,7 @@ func main() {
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		WithEnvVariable(accountKey, "/apps/secrets/"+accountFileName).
+		WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", destroyingShortLivedInfraStep}).
 		WithExec([]string{
 			"terragrunt",
