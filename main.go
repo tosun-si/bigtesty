@@ -43,14 +43,14 @@ func main() {
 
 	hostSourceDir := client.Host().Directory(".", dagger.HostDirectoryOpts{})
 
-	gcloudConfigSourceDir := client.Host().Directory(
-		os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
-	)
+	//gcloudConfigSourceDir := client.Host().Directory(
+	//	os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
+	//)
 
 	source := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
 		WithMountedDirectory("/src", hostSourceDir).
-		WithDirectory("/src/config/gcloud", gcloudConfigSourceDir).
+		//WithDirectory("/src/config/gcloud", gcloudConfigSourceDir).
 		WithWorkdir("/src").
 		Directory(".")
 
@@ -166,6 +166,18 @@ func main() {
 		})
 
 	out, err := destroyInfra.Stdout(ctx)
+
+	//prodImage := client.Container().
+	//	From("cgr.dev/chainguard/wolfi-base:latest").
+	//	WithDefaultArgs(). // Set CMD to []
+	//	WithFile("/bin/dagger", destroyInfra.File("/src")).
+	//	WithEntrypoint([]string{"/bin/dagger"})
+	//
+	//// generate uuid for ttl.sh publish
+	//id := uuid.New()
+	//tag := fmt.Sprintf("ttl.sh/bigtesty-%s:1h", id.String())
+	//
+	//_, err = prodImage.Publish(ctx, tag)
 
 	if err != nil {
 		panic(err)

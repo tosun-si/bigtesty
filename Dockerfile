@@ -1,10 +1,17 @@
-FROM google/cloud-sdk:416.0.0 as cloud
+FROM golang:1.20-alpine as builder
 
-WORKDIR /
+WORKDIR /app
 
-COPY secrets/sa-bigtesty.json .
+COPY . .
 
-RUN gcloud auth activate-service-account sa-dataflow-dev@gb-poc-373711.iam.gserviceaccount.com --key-file=sa-bigtesty.json --project=gb-poc-373711
-RUN gcloud config set account sa-dataflow-dev@gb-poc-373711.iam.gserviceaccount.com
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtesty
 
-ENTRYPOINT [ "sh", "-c", "gcloud builds submit --project=gb-poc-373711 --region=europe-west1 --config bigtesty-pipeline.yaml --verbosity=debug ." ]
+FROM alpine:latest
+
+WORKDIR /app
+
+RUN apk add docker-cli curl
+
+COPY --from=builder /app/bin/bigtesty .
+
+ENTRYPOINT ["/app/bigtesty"]
