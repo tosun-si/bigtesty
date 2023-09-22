@@ -4,14 +4,16 @@ WORKDIR /app
 
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtesty
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtestyapp
 
 FROM alpine:latest
 
 WORKDIR /app
 
+COPY . .
+
 RUN apk add docker-cli curl
 
-COPY --from=builder /app/bin/bigtesty .
+COPY --from=builder /app/bin/bigtestyapp .
 
-ENTRYPOINT ["/app/bigtesty"]
+ENTRYPOINT ["/app/bigtestyapp"]

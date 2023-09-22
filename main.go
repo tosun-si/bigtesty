@@ -21,7 +21,7 @@ func main() {
 	assertionActualWithExpectedStep := getStepMessage("Assertion actual with expected")
 	destroyingShortLivedInfraStep := getStepMessage("Destroying the short lived Infra")
 
-	accountKey := "GOOGLE_APPLICATION_CREDENTIALS"
+	//accountKey := "GOOGLE_APPLICATION_CREDENTIALS"
 	projectIdKey := "PROJECT_ID"
 	tfVarProjectIdKey := "TF_VAR_project_id"
 	tfStateBucketKey := "TF_STATE_BUCKET"
@@ -42,6 +42,10 @@ func main() {
 	defer client.Close()
 
 	hostSourceDir := client.Host().Directory(".", dagger.HostDirectoryOpts{})
+
+	gcloudConfigSourceDir := client.Host().Directory(
+		os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
+	)
 
 	//gcloudConfigSourceDir := client.Host().Directory(
 	//	os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
@@ -72,20 +76,27 @@ func main() {
 
 	installInfra := client.Container().
 		From("alpine/terragrunt:1.3.6").
+		WithWorkdir("/app").
+		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
 		WithDirectory(".", installPythonPackage).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(tfVarProjectIdKey, projectId).
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
+		//WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
+		WithExec([]string{
+			"ls",
+			"-R",
+			"/root/.config",
+		}).
 		WithExec([]string{
 			"terragrunt",
 			"run-all",
 			"init",
 			"--terragrunt-working-dir",
-			"/apps/bigtesty/infra",
+			"/app/bigtesty/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -94,7 +105,7 @@ func main() {
 			"--out",
 			"tfplan.out",
 			"--terragrunt-working-dir",
-			"/apps/bigtesty/infra",
+			"/app/bigtesty/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -103,16 +114,17 @@ func main() {
 			"--terragrunt-non-interactive",
 			"tfplan.out",
 			"--terragrunt-working-dir",
-			"/apps/bigtesty/infra",
+			"/app/bigtesty/infra",
 		}).
 		Directory(".")
 
 	insertionTestData := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
+		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
 		WithDirectory(".", installInfra).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
+		//WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", insertingTestDataTablesStep}).
 		WithExec([]string{
 			"python3",
@@ -125,10 +137,11 @@ func main() {
 
 	assertion := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
+		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
 		WithDirectory(".", insertionTestData).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
+		//WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", assertionActualWithExpectedStep}).
 		WithExec([]string{
 			"python3",
@@ -141,20 +154,22 @@ func main() {
 
 	destroyInfra := client.Container().
 		From("alpine/terragrunt:1.3.6").
+		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
+		WithWorkdir("/app").
 		WithDirectory(".", assertion).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(tfVarProjectIdKey, projectId).
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
+		//WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", destroyingShortLivedInfraStep}).
 		WithExec([]string{
 			"terragrunt",
 			"run-all",
 			"init",
 			"--terragrunt-working-dir",
-			"/apps/bigtesty/infra",
+			"/app/bigtesty/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -162,22 +177,10 @@ func main() {
 			"destroy",
 			"--terragrunt-non-interactive",
 			"--terragrunt-working-dir",
-			"/apps/bigtesty/infra",
+			"/app/bigtesty/infra",
 		})
 
 	out, err := destroyInfra.Stdout(ctx)
-
-	//prodImage := client.Container().
-	//	From("cgr.dev/chainguard/wolfi-base:latest").
-	//	WithDefaultArgs(). // Set CMD to []
-	//	WithFile("/bin/dagger", destroyInfra.File("/src")).
-	//	WithEntrypoint([]string{"/bin/dagger"})
-	//
-	//// generate uuid for ttl.sh publish
-	//id := uuid.New()
-	//tag := fmt.Sprintf("ttl.sh/bigtesty-%s:1h", id.String())
-	//
-	//_, err = prodImage.Publish(ctx, tag)
 
 	if err != nil {
 		panic(err)
