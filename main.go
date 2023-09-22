@@ -21,13 +21,16 @@ func main() {
 	assertionActualWithExpectedStep := getStepMessage("Assertion actual with expected")
 	destroyingShortLivedInfraStep := getStepMessage("Destroying the short lived Infra")
 
-	//accountKey := "GOOGLE_APPLICATION_CREDENTIALS"
 	projectIdKey := "PROJECT_ID"
 	tfVarProjectIdKey := "TF_VAR_project_id"
 	tfStateBucketKey := "TF_STATE_BUCKET"
 	tfStatePrefixKey := "TF_STATE_PREFIX"
 	googleProviderVersionKey := "GOOGLE_PROVIDER_VERSION"
 	pythonPathKey := "PYTHONPATH"
+
+	gcloudContainerConfigPath := "/root/.config/gcloud"
+	testFolderPath := "/app/tests"
+	tablesFolderPath := "/app/infra/bigquery/tables"
 
 	projectId := os.Getenv("PROJECT_ID")
 	tfStateBucket := os.Getenv("TF_STATE_BUCKET")
@@ -47,14 +50,17 @@ func main() {
 		os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
 	)
 
-	//gcloudConfigSourceDir := client.Host().Directory(
-	//	os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
-	//)
+	testsSourceDir := client.Host().Directory(
+		testFolderPath, dagger.HostDirectoryOpts{},
+	)
+
+	tablesSourceDir := client.Host().Directory(
+		tablesFolderPath, dagger.HostDirectoryOpts{},
+	)
 
 	source := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
 		WithMountedDirectory("/src", hostSourceDir).
-		//WithDirectory("/src/config/gcloud", gcloudConfigSourceDir).
 		WithWorkdir("/src").
 		Directory(".")
 
@@ -77,26 +83,26 @@ func main() {
 	installInfra := client.Container().
 		From("alpine/terragrunt:1.3.6").
 		WithWorkdir("/app").
-		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
+		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", installPythonPackage).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(tfVarProjectIdKey, projectId).
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		//WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
 		WithExec([]string{
 			"ls",
 			"-R",
-			"/root/.config",
+			"/app/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
 			"run-all",
 			"init",
 			"--terragrunt-working-dir",
-			"/app/bigtesty/infra",
+			"/app/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -105,7 +111,7 @@ func main() {
 			"--out",
 			"tfplan.out",
 			"--terragrunt-working-dir",
-			"/app/bigtesty/infra",
+			"/app/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -114,22 +120,22 @@ func main() {
 			"--terragrunt-non-interactive",
 			"tfplan.out",
 			"--terragrunt-working-dir",
-			"/app/bigtesty/infra",
+			"/app/infra",
 		}).
 		Directory(".")
 
 	insertionTestData := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
-		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
+		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", installInfra).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		//WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", insertingTestDataTablesStep}).
 		WithExec([]string{
 			"python3",
 			"-m",
-			"bigtesty.insertion_test_data_bigquery",
+			"bigtesty.given.insertion_test_data_bigquery",
 			"--project_id=" + projectId,
 			"--root_folder=" + rootTestFolder,
 		}).
@@ -137,16 +143,16 @@ func main() {
 
 	assertion := client.Container().
 		From("google/cloud-sdk:420.0.0-slim").
-		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
+		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", insertionTestData).
 		WithEnvVariable(projectIdKey, projectId).
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
-		//WithEnvVariable(accountKey, "config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", assertionActualWithExpectedStep}).
 		WithExec([]string{
 			"python3",
 			"-m",
-			"bigtesty.assertion_and_store_report",
+			"bigtesty.then.assertion_and_store_report",
 			"--project_id=" + projectId,
 			"--root_folder=" + rootTestFolder,
 		}).
@@ -154,7 +160,8 @@ func main() {
 
 	destroyInfra := client.Container().
 		From("alpine/terragrunt:1.3.6").
-		WithMountedDirectory("/root/.config/gcloud", gcloudConfigSourceDir).
+		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithWorkdir("/app").
 		WithDirectory(".", assertion).
 		WithEnvVariable(projectIdKey, projectId).
@@ -162,14 +169,13 @@ func main() {
 		WithEnvVariable(tfStateBucketKey, tfStateBucket).
 		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
 		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
-		//WithEnvVariable(accountKey, "/apps/config/gcloud/application_default_credentials.json").
 		WithExec([]string{"echo", destroyingShortLivedInfraStep}).
 		WithExec([]string{
 			"terragrunt",
 			"run-all",
 			"init",
 			"--terragrunt-working-dir",
-			"/app/bigtesty/infra",
+			"/app/infra",
 		}).
 		WithExec([]string{
 			"terragrunt",
@@ -177,7 +183,7 @@ func main() {
 			"destroy",
 			"--terragrunt-non-interactive",
 			"--terragrunt-working-dir",
-			"/app/bigtesty/infra",
+			"/app/infra",
 		})
 
 	out, err := destroyInfra.Stdout(ctx)

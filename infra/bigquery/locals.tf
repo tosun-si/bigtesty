@@ -1,5 +1,5 @@
 locals {
-  datasetsArray    = jsondecode(file("${path.module}/tables.json"))
+  datasetsArray    = jsondecode(file("${path.module}/tables/tables.json"))
   datasetsMap      = {for idx, val in local.datasetsArray : idx => val}
   tables_flattened = flatten([
     for dataset in local.datasetsMap : [

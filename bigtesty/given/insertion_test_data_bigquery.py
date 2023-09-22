@@ -2,10 +2,10 @@ from typing import List, Dict
 
 from google.cloud import bigquery
 
-from arguments import args
-from definition_test_config_helper import get_definition_test_dicts_from_path
-from files_loader_helper import load_file_as_dicts
-from lambda_functions import flat_map
+from bigtesty.arguments import args
+from bigtesty.definition_test_config_helper import get_definition_test_dicts_from_path
+from bigtesty.files_loader_helper import load_file_as_dicts
+from bigtesty.lambda_functions import flat_map
 
 if __name__ == '__main__':
     print(args.root_folder)
