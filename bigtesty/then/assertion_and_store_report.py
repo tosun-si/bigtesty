@@ -10,6 +10,8 @@ from bigtesty.files_loader_helper import load_file_as_string, load_file_as_dicts
 from bigtesty.lambda_functions import flat_map
 from bigtesty.then.failure_test_exception import FailureTestException
 
+client = bigquery.Client(project=args.project_id)
+
 
 def get_query(then: Dict) -> str:
     actual = then.get('actual')
@@ -63,8 +65,6 @@ if __name__ == '__main__':
     then_list = list(flat_map(lambda scenario: scenario['then'], scenarios))
     print("######THEN LIST")
     print(then_list)
-
-    client = bigquery.Client(project=args.project_id)
 
     report_results: List[Dict] = list(map(to_report_result, then_list))
     print("#########Report results")
