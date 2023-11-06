@@ -1,3 +1,4 @@
 pytest==7.2.1
 deepdiff==6.3.0
 google-cloud-bigquery==3.7.0
+pulumi-gcp==6.67.0
