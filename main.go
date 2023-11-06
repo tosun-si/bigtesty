@@ -15,6 +15,10 @@ func main() {
 	ctx := context.Background()
 	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stdout))
 
+	gcloudSdkImageName := "google/cloud-sdk:420.0.0-slim"
+	pythonImageName := "python:3.8.15-slim"
+	pulumiImageName := "pulumi/pulumi-python:3.91.1"
+
 	installingPythonPackageStep := getStepMessage("Installing BigTesty Python packages")
 	creatingShortLivedInfraStep := getStepMessage("Creating the short lived Infra")
 	insertingTestDataTablesStep := getStepMessage("Inserting Test data to Tables")
@@ -22,20 +26,20 @@ func main() {
 	destroyingShortLivedInfraStep := getStepMessage("Destroying the short lived Infra")
 
 	projectIdKey := "PROJECT_ID"
-	tfVarProjectIdKey := "TF_VAR_project_id"
-	tfStateBucketKey := "TF_STATE_BUCKET"
-	tfStatePrefixKey := "TF_STATE_PREFIX"
-	googleProviderVersionKey := "GOOGLE_PROVIDER_VERSION"
+	pulumiProjectIdKey := "GOOGLE_PROJECT"
+	pulumiRegionKey := "GOOGLE_REGION"
+	pulumiBackendUrlKey := "PULUMI_BACKEND_URL"
+	pulumiConfigPassphraseKey := "PULUMI_CONFIG_PASSPHRASE"
+	pulumiConfigFakePassphraseValue := "gcp_fake_passphrase"
 	pythonPathKey := "PYTHONPATH"
 
 	gcloudContainerConfigPath := "/root/.config/gcloud"
 	testFolderPath := "/app/tests"
-	tablesFolderPath := "/app/infra/bigquery/tables"
+	tablesFolderPath := "/app/infra/resource/tables"
 
 	projectId := os.Getenv("PROJECT_ID")
-	tfStateBucket := os.Getenv("TF_STATE_BUCKET")
-	tfStatePrefix := os.Getenv("TF_STATE_PREFIX")
-	googleProviderVersion := os.Getenv("GOOGLE_PROVIDER_VERSION")
+	location := os.Getenv("LOCATION")
+	iacBackendUrl := os.Getenv("IAC_BACKEND_URL")
 	rootTestFolder := os.Getenv("ROOT_TEST_FOLDER")
 	bigTestyInternalPythonPath := "bigtesty"
 
@@ -59,13 +63,13 @@ func main() {
 	)
 
 	source := client.Container().
-		From("google/cloud-sdk:420.0.0-slim").
+		From(gcloudSdkImageName).
 		WithMountedDirectory("/src", hostSourceDir).
 		WithWorkdir("/src").
 		Directory(".")
 
 	installPythonPackage := client.Container().
-		From("python:3.8.15-slim").
+		From(pythonImageName).
 		WithDirectory(".", source).
 		WithExec([]string{
 			"echo",
@@ -81,51 +85,45 @@ func main() {
 		Directory(".")
 
 	installInfra := client.Container().
-		From("alpine/terragrunt:1.3.6").
-		WithWorkdir("/app").
+		From(pulumiImageName).
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", installPythonPackage).
-		WithEnvVariable(projectIdKey, projectId).
-		WithEnvVariable(tfVarProjectIdKey, projectId).
-		WithEnvVariable(tfStateBucketKey, tfStateBucket).
-		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
-		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
+		WithEnvVariable(pulumiProjectIdKey, projectId).
+		WithEnvVariable(pulumiRegionKey, location).
+		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
+		WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
 		WithExec([]string{
-			"ls",
-			"-R",
-			"/app/infra",
+			"pip3",
+			"install",
+			"-r",
+			"infra/ci_cd_requirements.txt",
+			"--user",
 		}).
 		WithExec([]string{
-			"terragrunt",
-			"run-all",
-			"init",
-			"--terragrunt-working-dir",
-			"/app/infra",
+			"pulumi",
+			"stack",
+			"select",
+			"bigtesty",
+			"--create",
+			"--cwd",
+			"infra",
 		}).
 		WithExec([]string{
-			"terragrunt",
-			"run-all",
-			"plan",
-			"--out",
-			"tfplan.out",
-			"--terragrunt-working-dir",
-			"/app/infra",
-		}).
-		WithExec([]string{
-			"terragrunt",
-			"run-all",
-			"apply",
-			"--terragrunt-non-interactive",
-			"tfplan.out",
-			"--terragrunt-working-dir",
-			"/app/infra",
+			"pulumi",
+			"up",
+			"--diff",
+			"--yes",
+			"--cwd",
+			"infra",
+			"--color",
+			"always",
 		}).
 		Directory(".")
 
 	insertionTestData := client.Container().
-		From("google/cloud-sdk:420.0.0-slim").
+		From(gcloudSdkImageName).
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", installInfra).
@@ -142,7 +140,7 @@ func main() {
 		Directory(".")
 
 	assertion := client.Container().
-		From("google/cloud-sdk:420.0.0-slim").
+		From(gcloudSdkImageName).
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", insertionTestData).
@@ -159,31 +157,33 @@ func main() {
 		Directory(".")
 
 	destroyInfra := client.Container().
-		From("alpine/terragrunt:1.3.6").
+		From(pulumiImageName).
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
-		WithWorkdir("/app").
 		WithDirectory(".", assertion).
-		WithEnvVariable(projectIdKey, projectId).
-		WithEnvVariable(tfVarProjectIdKey, projectId).
-		WithEnvVariable(tfStateBucketKey, tfStateBucket).
-		WithEnvVariable(tfStatePrefixKey, tfStatePrefix).
-		WithEnvVariable(googleProviderVersionKey, googleProviderVersion).
+		WithEnvVariable(pulumiProjectIdKey, projectId).
+		WithEnvVariable(pulumiRegionKey, location).
+		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
+		WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
 		WithExec([]string{"echo", destroyingShortLivedInfraStep}).
 		WithExec([]string{
-			"terragrunt",
-			"run-all",
-			"init",
-			"--terragrunt-working-dir",
-			"/app/infra",
+			"pulumi",
+			"stack",
+			"select",
+			"bigtesty",
+			"--create",
+			"--cwd",
+			"infra",
 		}).
 		WithExec([]string{
-			"terragrunt",
-			"run-all",
+			"pulumi",
 			"destroy",
-			"--terragrunt-non-interactive",
-			"--terragrunt-working-dir",
-			"/app/infra",
+			"--diff",
+			"--yes",
+			"--cwd",
+			"infra",
+			"--color",
+			"always",
 		})
 
 	out, err := destroyInfra.Stdout(ctx)
