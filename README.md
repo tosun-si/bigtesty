@@ -12,7 +12,7 @@ BigTesty is a framework that allows to create Integration Tests with BigQuery on
     -e IAC_BACKEND_URL=$IAC_BACKEND_URL \
     -e ROOT_TEST_FOLDER=$ROOT_TEST_FOLDER \
     -v $(pwd)/tests:/app/tests \
-    -v $(pwd)/tests/tables:/app/infra/resource/tables \
+    -v $(pwd)/tests/tables:/app/bigtesty/infra/resource/tables \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $HOME/.config/gcloud:/root/.config/gcloud \
     bigtesty

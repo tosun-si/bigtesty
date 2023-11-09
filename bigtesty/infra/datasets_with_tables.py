@@ -1,17 +1,17 @@
-from typing import Dict, List
+from typing import Dict
 
 import pulumi_gcp as gcp
 from pulumi import ResourceOptions
 from pulumi_gcp.bigquery import Dataset
 
-from datasets_with_tables_config_file_loader import datasets_with_tables_config, get_table_schema
+from bigtesty.infra.datasets_with_tables_config_file_loader import datasets_with_tables_config, get_table_schema
 
 datasets_with_tables = datasets_with_tables_config
 
 
-def get_table(dataset: Dataset, table: Dict):
+def get_table(dataset_id_with_hash: str, dataset: Dataset, table: Dict):
     return gcp.bigquery.Table(
-        table["tableId"],
+        get_table_resource_name(dataset_id_with_hash, table['tableId']),
         deletion_protection=False,
         dataset_id=dataset.dataset_id,
         table_id=table["tableId"],
@@ -21,9 +21,9 @@ def get_table(dataset: Dataset, table: Dict):
     )
 
 
-def get_table_with_partitioning(dataset: Dataset, table: Dict):
+def get_table_with_partitioning(dataset_id_with_hash: str, dataset: Dataset, table: Dict):
     return gcp.bigquery.Table(
-        table["tableId"],
+        get_table_resource_name(dataset_id_with_hash, table['tableId']),
         deletion_protection=False,
         dataset_id=dataset.dataset_id,
         table_id=table["tableId"],
@@ -37,12 +37,14 @@ def get_table_with_partitioning(dataset: Dataset, table: Dict):
     )
 
 
-def get_dataset(dataset: Dict):
-    dataset_id = dataset["datasetId"]
+def get_table_resource_name(dataset_id: str, table_id: str) -> str:
+    return f'{dataset_id}_{table_id}'
 
+
+def get_dataset(dataset_id_with_hash: str, dataset: Dict):
     return gcp.bigquery.Dataset(
-        dataset_id,
-        dataset_id=dataset_id,
+        dataset_id_with_hash,
+        dataset_id=dataset_id_with_hash,
         friendly_name=dataset["datasetFriendlyName"],
         description=dataset["datasetDescription"],
         location=dataset["datasetRegion"]

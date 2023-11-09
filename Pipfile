@@ -12,6 +12,7 @@ click = "==8.1.4"
 dagger-io = "==0.4.0"
 pulumi-gcp = "==6.67.0"
 google-cloud-bigquery = "==3.4.2"
+toolz = "==0.12.0"
 
 [requires]
 python_version = "3.11"

@@ -4,11 +4,26 @@ import (
 	"context"
 	"dagger.io/dagger"
 	"fmt"
+	"math/rand"
 	"os"
+	"strings"
+	"time"
 )
 
 func getStepMessage(message string) string {
 	return fmt.Sprintf("--------------------------- %s ---------------------------", message)
+}
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func generateRandomString(length int) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return strings.ToLower(string(b))
 }
 
 func main() {
@@ -32,10 +47,12 @@ func main() {
 	pulumiConfigPassphraseKey := "PULUMI_CONFIG_PASSPHRASE"
 	pulumiConfigFakePassphraseValue := "gcp_fake_passphrase"
 	pythonPathKey := "PYTHONPATH"
+	testRootFolderKey := "TEST_ROOT_FOLDER"
+	datasetsHashKey := "DATASETS_HASH"
 
 	gcloudContainerConfigPath := "/root/.config/gcloud"
 	testFolderPath := "/app/tests"
-	tablesFolderPath := "/app/infra/resource/tables"
+	tablesFolderPath := "/app/bigtesty/infra/resource/tables"
 
 	projectId := os.Getenv("PROJECT_ID")
 	location := os.Getenv("LOCATION")
@@ -47,6 +64,8 @@ func main() {
 		panic(err)
 	}
 	defer client.Close()
+
+	datasetsHash := generateRandomString(5)
 
 	hostSourceDir := client.Host().Directory(".", dagger.HostDirectoryOpts{})
 
@@ -86,6 +105,7 @@ func main() {
 
 	installInfra := client.Container().
 		From(pulumiImageName).
+		WithWorkdir("/app").
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", installPythonPackage).
@@ -93,12 +113,14 @@ func main() {
 		WithEnvVariable(pulumiRegionKey, location).
 		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
 		WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
+		WithEnvVariable(testRootFolderKey, rootTestFolder).
+		WithEnvVariable(datasetsHashKey, datasetsHash).
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
 		WithExec([]string{
 			"pip3",
 			"install",
 			"-r",
-			"infra/ci_cd_requirements.txt",
+			"bigtesty/infra/ci_cd_requirements.txt",
 			"--user",
 		}).
 		WithExec([]string{
@@ -108,7 +130,7 @@ func main() {
 			"bigtesty",
 			"--create",
 			"--cwd",
-			"infra",
+			"bigtesty/infra",
 		}).
 		WithExec([]string{
 			"pulumi",
@@ -116,7 +138,7 @@ func main() {
 			"--diff",
 			"--yes",
 			"--cwd",
-			"infra",
+			"bigtesty/infra",
 			"--color",
 			"always",
 		}).
@@ -136,6 +158,7 @@ func main() {
 			"bigtesty.given.insertion_test_data_bigquery",
 			"--project_id=" + projectId,
 			"--root_folder=" + rootTestFolder,
+			"--datasets_hash=" + datasetsHash,
 		}).
 		Directory(".")
 
@@ -153,6 +176,7 @@ func main() {
 			"bigtesty.then.assertion_and_store_report",
 			"--project_id=" + projectId,
 			"--root_folder=" + rootTestFolder,
+			"--datasets_hash=" + datasetsHash,
 		}).
 		Directory(".")
 
@@ -173,7 +197,7 @@ func main() {
 			"bigtesty",
 			"--create",
 			"--cwd",
-			"infra",
+			"bigtesty/infra",
 		}).
 		WithExec([]string{
 			"pulumi",
@@ -181,7 +205,7 @@ func main() {
 			"--diff",
 			"--yes",
 			"--cwd",
-			"infra",
+			"bigtesty/infra",
 			"--color",
 			"always",
 		})

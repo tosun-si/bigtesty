@@ -2,13 +2,12 @@ import glob
 import json
 from typing import List, Dict
 
-from arguments import args
-from definition_test_file_exception import DefinitionTestFileException
+from bigtesty.definition_test_file_exception import DefinitionTestFileException
 
 DEFINITION_TEST_FILE_PATTERN = "**/definition_*.json"
 
 
-def get_definition_test_dicts_from_path() -> List[Dict]:
+def get_definition_test_dicts_from_path(data_testing_root_path: str) -> List[Dict]:
     """
      Gets all the test definition files existing in the given folder path and then map them to dicts.
      The result is a list of dict, and each dict represents a test definition.
@@ -17,11 +16,9 @@ def get_definition_test_dicts_from_path() -> List[Dict]:
     :return: a list of test definition dict
     """
     print("#############ROOT DIR")
-    print(args.root_folder)
+    print(data_testing_root_path)
 
-    data_testing_root_path = args.root_folder
-
-    definition_test_file_paths: List[str] = get_definition_tests_file_paths(args.root_folder)
+    definition_test_file_paths: List[str] = get_definition_tests_file_paths(data_testing_root_path)
 
     if not definition_test_file_paths:
         raise DefinitionTestFileException(
