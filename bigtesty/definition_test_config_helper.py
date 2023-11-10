@@ -3,6 +3,7 @@ import json
 from typing import List, Dict
 
 from bigtesty.definition_test_file_exception import DefinitionTestFileException
+from bigtesty.lambda_functions import flat_map
 
 DEFINITION_TEST_FILE_PATTERN = "**/definition_*.json"
 
@@ -26,6 +27,12 @@ def get_definition_test_dicts_from_path(data_testing_root_path: str) -> List[Dic
         )
 
     return list(map(lambda path: to_definition_test_dict(path), definition_test_file_paths))
+
+
+def get_scenarios(data_testing_root_path: str):
+    return list(
+        flat_map(lambda deftest: deftest['scenarios'], get_definition_test_dicts_from_path(data_testing_root_path))
+    )
 
 
 def get_definition_tests_file_paths(data_testing_root_path: str) -> List[str]:
