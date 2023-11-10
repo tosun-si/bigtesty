@@ -25,6 +25,3 @@ def get_datasets_with_tables_config() -> List[Dict]:
     datasets_tables_config_file_path = str(current_directory / "resource/tables/tables.json")
 
     return _load_file_as_dicts(datasets_tables_config_file_path)
-
-
-datasets_with_tables_config = get_datasets_with_tables_config()

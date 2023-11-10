@@ -4,9 +4,7 @@ import pulumi_gcp as gcp
 from pulumi import ResourceOptions
 from pulumi_gcp.bigquery import Dataset
 
-from bigtesty.infra.datasets_with_tables_config_file_loader import datasets_with_tables_config, get_table_schema
-
-datasets_with_tables = datasets_with_tables_config
+from bigtesty.infra.datasets_with_tables_config_file_loader import get_table_schema
 
 
 def get_table(dataset_id_with_hash: str, dataset: Dataset, table: Dict):

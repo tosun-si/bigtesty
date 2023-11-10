@@ -44,6 +44,7 @@ func main() {
 	pulumiProjectIdKey := "GOOGLE_PROJECT"
 	pulumiRegionKey := "GOOGLE_REGION"
 	pulumiBackendUrlKey := "PULUMI_BACKEND_URL"
+	pulumiBigTestyStackNameKey := "BIGTESTY_STACK_NAME"
 	pulumiConfigPassphraseKey := "PULUMI_CONFIG_PASSPHRASE"
 	pulumiConfigFakePassphraseValue := "gcp_fake_passphrase"
 	pythonPathKey := "PYTHONPATH"
@@ -59,6 +60,7 @@ func main() {
 	iacBackendUrl := os.Getenv("IAC_BACKEND_URL")
 	rootTestFolder := os.Getenv("ROOT_TEST_FOLDER")
 	bigTestyInternalPythonPath := "bigtesty"
+	bigTestyIacStackName := "bigtesty"
 
 	if err != nil {
 		panic(err)
@@ -113,6 +115,8 @@ func main() {
 		WithEnvVariable(pulumiRegionKey, location).
 		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
 		WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
+		WithEnvVariable(pulumiBigTestyStackNameKey, bigTestyIacStackName).
+		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
 		WithEnvVariable(testRootFolderKey, rootTestFolder).
 		WithEnvVariable(datasetsHashKey, datasetsHash).
 		WithExec([]string{"echo", creatingShortLivedInfraStep}).
@@ -124,25 +128,52 @@ func main() {
 			"--user",
 		}).
 		WithExec([]string{
-			"pulumi",
-			"stack",
-			"select",
-			"bigtesty",
-			"--create",
-			"--cwd",
-			"bigtesty/infra",
-		}).
-		WithExec([]string{
-			"pulumi",
-			"up",
-			"--diff",
-			"--yes",
-			"--cwd",
-			"bigtesty/infra",
-			"--color",
-			"always",
+			"python",
+			"-m",
+			"bigtesty.infra.main",
 		}).
 		Directory(".")
+
+	//installInfra := client.Container().
+	//	From(pulumiImageName).
+	//	WithWorkdir("/app").
+	//	WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+	//	WithMountedDirectory(tablesFolderPath, tablesSourceDir).
+	//	WithDirectory(".", installPythonPackage).
+	//	WithEnvVariable(pulumiProjectIdKey, projectId).
+	//	WithEnvVariable(pulumiRegionKey, location).
+	//	WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
+	//	WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
+	//	WithEnvVariable(testRootFolderKey, rootTestFolder).
+	//	WithEnvVariable(datasetsHashKey, datasetsHash).
+	//	WithExec([]string{"echo", creatingShortLivedInfraStep}).
+	//	WithExec([]string{
+	//		"pip3",
+	//		"install",
+	//		"-r",
+	//		"bigtesty/infra/ci_cd_requirements.txt",
+	//		"--user",
+	//	}).
+	//	WithExec([]string{
+	//		"pulumi",
+	//		"stack",
+	//		"select",
+	//		"bigtesty",
+	//		"--create",
+	//		"--cwd",
+	//		"bigtesty/infra",
+	//	}).
+	//	WithExec([]string{
+	//		"pulumi",
+	//		"up",
+	//		"--diff",
+	//		"--yes",
+	//		"--cwd",
+	//		"bigtesty/infra",
+	//		"--color",
+	//		"always",
+	//	}).
+	//	Directory(".")
 
 	insertionTestData := client.Container().
 		From(gcloudSdkImageName).
@@ -182,33 +213,62 @@ func main() {
 
 	destroyInfra := client.Container().
 		From(pulumiImageName).
+		WithWorkdir("/app").
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", assertion).
 		WithEnvVariable(pulumiProjectIdKey, projectId).
 		WithEnvVariable(pulumiRegionKey, location).
 		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
+		WithEnvVariable(pulumiBigTestyStackNameKey, bigTestyIacStackName).
 		WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
+		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
+		WithEnvVariable(testRootFolderKey, rootTestFolder).
+		WithEnvVariable(datasetsHashKey, datasetsHash).
 		WithExec([]string{"echo", destroyingShortLivedInfraStep}).
 		WithExec([]string{
-			"pulumi",
-			"stack",
-			"select",
-			"bigtesty",
-			"--create",
-			"--cwd",
-			"bigtesty/infra",
+			"pip3",
+			"install",
+			"-r",
+			"bigtesty/infra/ci_cd_requirements.txt",
+			"--user",
 		}).
 		WithExec([]string{
-			"pulumi",
+			"python",
+			"-m",
+			"bigtesty.infra.main",
 			"destroy",
-			"--diff",
-			"--yes",
-			"--cwd",
-			"bigtesty/infra",
-			"--color",
-			"always",
 		})
+
+	//destroyInfra := client.Container().
+	//	From(pulumiImageName).
+	//	WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+	//	WithMountedDirectory(tablesFolderPath, tablesSourceDir).
+	//	WithDirectory(".", assertion).
+	//	WithEnvVariable(pulumiProjectIdKey, projectId).
+	//	WithEnvVariable(pulumiRegionKey, location).
+	//	WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
+	//	WithEnvVariable(pulumiConfigPassphraseKey, pulumiConfigFakePassphraseValue).
+	//	WithExec([]string{"echo", destroyingShortLivedInfraStep}).
+	//	WithExec([]string{
+	//		"pulumi",
+	//		"stack",
+	//		"select",
+	//		"bigtesty",
+	//		"--create",
+	//		"--cwd",
+	//		"bigtesty/infra",
+	//	}).
+	//	WithExec([]string{
+	//		"pulumi",
+	//		"destroy",
+	//		"--diff",
+	//		"--yes",
+	//		"--cwd",
+	//		"bigtesty/infra",
+	//		"--color",
+	//		"always",
+	//	})
 
 	out, err := destroyInfra.Stdout(ctx)
 
