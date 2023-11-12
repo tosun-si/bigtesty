@@ -4,15 +4,13 @@ from google.cloud import bigquery
 
 from bigtesty.arguments import args
 from bigtesty.dataset_helper import build_unique_dataset_id_for_scenario
-from bigtesty.definition_test_config_helper import get_definition_test_dicts_from_path
+from bigtesty.definition_test_config_helper import get_scenarios
 from bigtesty.files_loader_helper import load_file_as_dicts
-from bigtesty.lambda_functions import flat_map
 
 if __name__ == '__main__':
     print(args.root_folder)
-    scenarios = list(
-        flat_map(lambda deftest: deftest['scenarios'], get_definition_test_dicts_from_path(args.root_folder))
-    )
+    scenarios = get_scenarios(args.root_folder)
+
     print("######SCENARIOS LIST")
     print(scenarios)
 
@@ -27,7 +25,8 @@ if __name__ == '__main__':
             print(given)
 
             input_file_path = f"{args.root_folder}/{given['input_file_path']}"
-            input_as_dicts: List[Dict] = load_file_as_dicts(input_file_path)
+            input = given.get('input')
+            input_as_dicts: List[Dict] = input if input else load_file_as_dicts(input_file_path)
 
             print("####### INPUT AS DICT")
             print(input_as_dicts)
