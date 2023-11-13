@@ -30,15 +30,12 @@ func main() {
 	ctx := context.Background()
 	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stdout))
 
-	gcloudSdkImageName := "google/cloud-sdk:420.0.0-slim"
-	pythonImageName := "python:3.8.15-slim"
-	pulumiImageName := "pulumi/pulumi-python:3.91.1"
+	bigTestyEnvImageName := "ttl.sh/bigtesty-env:8h"
 
-	installingPythonPackageStep := getStepMessage("Installing BigTesty Python packages")
-	creatingShortLivedInfraStep := getStepMessage("Creating the short lived Infra")
+	creatingEphemeralInfraStep := getStepMessage("Creating the ephemeral infra")
 	insertingTestDataTablesStep := getStepMessage("Inserting Test data to Tables")
 	executeQueriesDestroyInfraAndAssertionsStep := getStepMessage(
-		"Execute SQL queries, generate reports result, destroying the short lived Infra and tests assertions",
+		"Execute SQL queries, generate reports result, destroying the ephemeral infra and tests assertions",
 	)
 
 	projectIdKey := "PROJECT_ID"
@@ -85,33 +82,17 @@ func main() {
 	)
 
 	source := client.Container().
-		From(gcloudSdkImageName).
+		From(bigTestyEnvImageName).
 		WithMountedDirectory("/src", hostSourceDir).
 		WithWorkdir("/src").
 		Directory(".")
 
-	installPythonPackage := client.Container().
-		From(pythonImageName).
-		WithDirectory(".", source).
-		WithExec([]string{
-			"echo",
-			installingPythonPackageStep,
-		}).
-		WithExec([]string{
-			"pip3",
-			"install",
-			"-r",
-			"bigtesty/requirements.txt",
-			"--user",
-		}).
-		Directory(".")
-
 	installInfra := client.Container().
-		From(pulumiImageName).
+		From(bigTestyEnvImageName).
 		WithWorkdir("/app").
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
-		WithDirectory(".", installPythonPackage).
+		WithDirectory(".", source).
 		WithEnvVariable(pulumiProjectIdKey, projectId).
 		WithEnvVariable(pulumiRegionKey, location).
 		WithEnvVariable(pulumiBackendUrlKey, iacBackendUrl).
@@ -120,14 +101,7 @@ func main() {
 		WithEnvVariable(pythonPathKey, bigTestyInternalPythonPath).
 		WithEnvVariable(testRootFolderKey, rootTestFolder).
 		WithEnvVariable(datasetsHashKey, datasetsHash).
-		WithExec([]string{"echo", creatingShortLivedInfraStep}).
-		WithExec([]string{
-			"pip3",
-			"install",
-			"-r",
-			"bigtesty/requirements.txt",
-			"--user",
-		}).
+		WithExec([]string{"echo", creatingEphemeralInfraStep}).
 		WithExec([]string{
 			"python",
 			"-m",
@@ -136,7 +110,7 @@ func main() {
 		Directory(".")
 
 	insertionTestData := client.Container().
-		From(gcloudSdkImageName).
+		From(bigTestyEnvImageName).
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", installInfra).
@@ -154,7 +128,7 @@ func main() {
 		Directory(".")
 
 	executeQueriesDestroyInfraAndAssertions := client.Container().
-		From(pulumiImageName).
+		From(bigTestyEnvImageName).
 		WithWorkdir("/app").
 		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
@@ -168,13 +142,6 @@ func main() {
 		WithEnvVariable(testRootFolderKey, rootTestFolder).
 		WithEnvVariable(datasetsHashKey, datasetsHash).
 		WithExec([]string{"echo", executeQueriesDestroyInfraAndAssertionsStep}).
-		WithExec([]string{
-			"pip3",
-			"install",
-			"-r",
-			"bigtesty/requirements.txt",
-			"--user",
-		}).
 		WithExec([]string{
 			"python",
 			"-m",
