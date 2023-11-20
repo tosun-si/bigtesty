@@ -6,13 +6,13 @@ COPY . .
 
 RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtestyapp
 
-FROM alpine:latest
+FROM mgoltzsche/podman:rootless
 
 WORKDIR /app
 
-COPY . .
+RUN ln -s $(which podman) /usr/local/bin/docker
 
-RUN apk add docker-cli curl
+COPY . .
 
 COPY --from=builder /app/bin/bigtestyapp .
 
