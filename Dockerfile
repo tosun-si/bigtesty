@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtestyapp
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg/mod GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/bigtestyapp
 
 FROM alpine:latest
 
