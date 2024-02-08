@@ -28,7 +28,7 @@ func generateRandomString(length int) string {
 
 func main() {
 	ctx := context.Background()
-	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stdout))
+	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
 
 	bigTestyEnvImageName := "ttl.sh/bigtesty-env:8h"
 
@@ -49,7 +49,6 @@ func main() {
 	testRootFolderKey := "TEST_ROOT_FOLDER"
 	datasetsHashKey := "DATASETS_HASH"
 
-	gcloudContainerConfigPath := "/root/.config/gcloud"
 	testFolderPath := "/app/tests"
 	tablesFolderPath := "/app/bigtesty/infra/resource/tables"
 
@@ -69,9 +68,9 @@ func main() {
 
 	hostSourceDir := client.Host().Directory(".", dagger.HostDirectoryOpts{})
 
-	gcloudConfigSourceDir := client.Host().Directory(
-		os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
-	)
+	//gcloudConfigSourceDir := client.Host().Directory(
+	//	os.Getenv("HOME")+"/.config/gcloud", dagger.HostDirectoryOpts{},
+	//)
 
 	testsSourceDir := client.Host().Directory(
 		testFolderPath, dagger.HostDirectoryOpts{},
@@ -90,7 +89,7 @@ func main() {
 	installInfra := client.Container().
 		From(bigTestyEnvImageName).
 		WithWorkdir("/app").
-		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", source).
 		WithEnvVariable(pulumiProjectIdKey, projectId).
@@ -111,7 +110,7 @@ func main() {
 
 	insertionTestData := client.Container().
 		From(bigTestyEnvImageName).
-		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", installInfra).
 		WithEnvVariable(projectIdKey, projectId).
@@ -130,7 +129,7 @@ func main() {
 	executeQueriesDestroyInfraAndAssertions := client.Container().
 		From(bigTestyEnvImageName).
 		WithWorkdir("/app").
-		WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
+		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
 		WithDirectory(".", insertionTestData).
 		WithEnvVariable(pulumiProjectIdKey, projectId).
@@ -152,7 +151,7 @@ func main() {
 	out, err := executeQueriesDestroyInfraAndAssertions.Stdout(ctx)
 
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error %v", err)
 	}
 
 	fmt.Printf("Published image to: %s\n", out)

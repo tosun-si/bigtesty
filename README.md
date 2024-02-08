@@ -17,3 +17,7 @@ BigTesty is a framework that allows to create Integration Tests with BigQuery on
     -v $HOME/.config/gcloud:/root/.config/gcloud \
     bigtesty
 ```
+
+```
+docker build -f Dockerfile -t bigtesty  --progress plain .
+```
