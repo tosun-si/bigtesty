@@ -1,0 +1,9 @@
+/.git
+/.github
+/diagram
+/.dockerignore
+/Dockerfile
+/LICENSE
+/Pipfile
+/Pipfile.lock
+/*.md
