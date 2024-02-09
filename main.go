@@ -30,7 +30,7 @@ func main() {
 	ctx := context.Background()
 	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
 
-	bigTestyEnvImageName := "ttl.sh/bigtesty-env:8h"
+	bigTestyDepsImageName := "mazlumtosun/bigtesty-deps:latest"
 
 	creatingEphemeralInfraStep := getStepMessage("Creating the ephemeral infra")
 	insertingTestDataTablesStep := getStepMessage("Inserting Test data to Tables")
@@ -81,13 +81,13 @@ func main() {
 	)
 
 	source := client.Container().
-		From(bigTestyEnvImageName).
+		From(bigTestyDepsImageName).
 		WithMountedDirectory("/src", hostSourceDir).
 		WithWorkdir("/src").
 		Directory(".")
 
 	installInfra := client.Container().
-		From(bigTestyEnvImageName).
+		From(bigTestyDepsImageName).
 		WithWorkdir("/app").
 		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
@@ -109,7 +109,7 @@ func main() {
 		Directory(".")
 
 	insertionTestData := client.Container().
-		From(bigTestyEnvImageName).
+		From(bigTestyDepsImageName).
 		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(testFolderPath, testsSourceDir).
 		WithDirectory(".", installInfra).
@@ -127,7 +127,7 @@ func main() {
 		Directory(".")
 
 	executeQueriesDestroyInfraAndAssertions := client.Container().
-		From(bigTestyEnvImageName).
+		From(bigTestyDepsImageName).
 		WithWorkdir("/app").
 		//WithMountedDirectory(gcloudContainerConfigPath, gcloudConfigSourceDir).
 		WithMountedDirectory(tablesFolderPath, tablesSourceDir).
