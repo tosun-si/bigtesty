@@ -3,3 +3,5 @@
 .DS_Store
 .envrc
 secrets
+*.pytest_cache
+__pycache__

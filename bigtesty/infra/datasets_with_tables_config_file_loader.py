@@ -1,5 +1,6 @@
 import json
-import pathlib
+import random
+import string
 from typing import List, Dict
 
 
@@ -13,15 +14,15 @@ def _load_file_as_string(file_path: str) -> str:
         return file.read()
 
 
-def get_table_schema(table: Dict) -> str:
-    current_directory = pathlib.Path(__file__).parent
-    datasets_tables_config_file_path = str(current_directory / "resource" / table["tableSchemaPath"])
+def get_table_schema(root_tables_folder: str, table: Dict) -> str:
+    datasets_tables_config_file_path = f'{root_tables_folder}/{table["tableSchemaPath"]}'
 
     return _load_file_as_string(datasets_tables_config_file_path)
 
 
-def get_datasets_with_tables_config() -> List[Dict]:
-    current_directory = pathlib.Path(__file__).parent
-    datasets_tables_config_file_path = str(current_directory / "resource/tables/tables.json")
+def get_datasets_hash(length) -> str:
+    letters = string.ascii_lowercase
+    datasets_hash = ''.join(random.choice(letters) for _ in range(length))
+    print(f'The generated datasets hash is : {datasets_hash}')
 
-    return _load_file_as_dicts(datasets_tables_config_file_path)
+    return datasets_hash
