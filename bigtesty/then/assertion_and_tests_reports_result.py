@@ -13,7 +13,7 @@ from bigtesty.then.failure_test_exception import FailureTestException
 
 def execute_query_and_build_reports_result(
         project_id: str,
-        test_root_folder: str,
+        root_test_folder: str,
         datasets_hash: str,
         scenarios: List[Dict]) -> List[Dict]:
     client = bigquery.Client(project=project_id)
@@ -23,7 +23,7 @@ def execute_query_and_build_reports_result(
         map(lambda scenario: _execute_query_and_build_report_result(
             bigquery_python_client=client,
             scenario=scenario,
-            test_root_folder=test_root_folder,
+            root_test_folder=root_test_folder,
             datasets_hash=datasets_hash
         ))
     ))
@@ -42,7 +42,7 @@ def check_any_failed_test_in_reports(reports_result: List[Dict]) -> bool:
 
 def _execute_query_and_build_report_result(bigquery_python_client: Client,
                                            scenario: Dict,
-                                           test_root_folder: str,
+                                           root_test_folder: str,
                                            datasets_hash: str) -> Dict:
     given_list: List[Dict] = scenario["given"]
 
@@ -53,7 +53,7 @@ def _execute_query_and_build_report_result(bigquery_python_client: Client,
         query = _build_query(
             scenario_id=scenario["id"],
             datasets_hash=datasets_hash,
-            test_root_folder=test_root_folder,
+            root_test_folder=root_test_folder,
             given_list=given_list,
             then=then
         )
@@ -66,7 +66,7 @@ def _execute_query_and_build_report_result(bigquery_python_client: Client,
         print("#########ACTUAL")
         print(actual_list)
 
-        expected_list = _get_expected_list(test_root_folder, then)
+        expected_list = _get_expected_list(root_test_folder, then)
         print("#########EXPECTED")
         print(expected_list)
 
@@ -93,11 +93,11 @@ def _execute_query_and_build_report_result(bigquery_python_client: Client,
 
 def _build_query(scenario_id: str,
                  datasets_hash: str,
-                 test_root_folder: str,
+                 root_test_folder: str,
                  given_list: List[Dict],
                  then: Dict) -> str:
     actual = then.get('actual')
-    sql_query = actual if actual else load_file_as_string(f"{test_root_folder}/{then['actual_file_path']}")
+    sql_query = actual if actual else load_file_as_string(f"{root_test_folder}/{then['actual_file_path']}")
 
     sql_query_result = ""
     for given in given_list:
@@ -124,6 +124,6 @@ def _replace_current_dataset_by_unique_dataset_for_scenario(sql_query: str,
     return sql_query.replace(f"{current_dataset}.", f"{unique_dataset_with_for_scenario}.")
 
 
-def _get_expected_list(test_root_folder: str, then: Dict) -> List[Dict]:
+def _get_expected_list(root_test_folder: str, then: Dict) -> List[Dict]:
     expected = then.get('expected')
-    return expected if expected else load_file_as_dicts(f"{test_root_folder}/{then['expected_file_path']}")
+    return expected if expected else load_file_as_dicts(f"{root_test_folder}/{then['expected_file_path']}")

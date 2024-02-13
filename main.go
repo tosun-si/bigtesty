@@ -49,6 +49,7 @@ func main() {
 	testRootFolderKey := "TEST_ROOT_FOLDER"
 	datasetsHashKey := "DATASETS_HASH"
 
+	//gcloudContainerConfigPath := "/root/.config/gcloud"
 	testFolderPath := "/app/tests"
 	tablesFolderPath := "/app/bigtesty/infra/resource/tables"
 

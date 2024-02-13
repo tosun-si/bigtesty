@@ -1,10 +1,9 @@
-ARG GO_VERSION=1.20-alpine
-ARG PULUMI_VERSION=3.91.1
+ARG PULUMI_VERSION=3.109.0
 
-FROM pulumi/pulumi-python:${PULUMI_VERSION} as bigtesty-deps
+FROM pulumi/pulumi-python:${PULUMI_VERSION}
 
 ARG BUILDPLATFORM
-ARG GCLOUD_SDK_VERSION="454.0.0"
+ARG GCLOUD_SDK_VERSION="468.0.0"
 
 ENV \
     CLOUD_SDK_VERSION=${GCLOUD_SDK_VERSION} \
@@ -30,27 +29,10 @@ EOF
 
 WORKDIR /app
 
-COPY bigtesty/requirements.txt ./
-
-RUN pip install -r requirements.txt
-
-FROM golang:${GO_VERSION} AS bigtesty-build
-
-ARG BUILDPLATFORM
-
-WORKDIR /app
-
 COPY . .
 
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg/mod go build -ldflags="-w -s" -o bin/bigtesty
+RUN pip install -r bigtesty/requirements.txt
 
-FROM alpine:latest AS bigtesty
+ENV PYTHONPATH=/app
 
-WORKDIR /app
-
-RUN apk add --no-cache docker-cli curl
-
-COPY bigtesty bigtesty
-COPY --from=bigtesty-build /app/bin/bigtesty /usr/bin/bigtesty
-
-ENTRYPOINT ["bigtesty"]
+ENTRYPOINT ["python", "-m", "bigtesty.infra.main"]
