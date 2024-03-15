@@ -1,6 +1,6 @@
 ARG PULUMI_VERSION=3.109.0
 
-FROM pulumi/pulumi-python:${PULUMI_VERSION}
+FROM pulumi/pulumi-python:${PULUMI_VERSION} AS bigtesty
 
 ARG BUILDPLATFORM
 ARG GCLOUD_SDK_VERSION="468.0.0"
