@@ -31,8 +31,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install -r bigtesty/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install -e .
 
-ENV PYTHONPATH=/app
-
-ENTRYPOINT ["python", "-m", "bigtesty.infra.main"]
+ENTRYPOINT ["bigtesty"]
