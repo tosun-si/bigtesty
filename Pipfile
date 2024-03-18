@@ -6,12 +6,11 @@ name = "pypi"
 [dev-packages]
 pytest = "==7.2.1"
 deepdiff = "==6.2.3"
-click = "==8.1.4"
 
 [packages]
-dagger-io = "==0.4.0"
 pulumi-gcp = "==6.67.0"
 google-cloud-bigquery = "==3.4.2"
+typer = { version = "==0.9.0", extras = ["all"] }
 toolz = "==0.12.0"
 
 [requires]
