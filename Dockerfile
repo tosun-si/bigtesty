@@ -10,6 +10,9 @@ ENV \
     PATH=/opt/google-cloud-sdk/bin:$PATH
 
 RUN <<EOF bash -e
+groupadd -g 1000 bigtesty
+useradd -mrd /opt/bigtesty -u 1000 -g 1000 bigtesty
+
 if [ "$BUILDPLATFORM" == "linux/amd64" ]; then
     curl -Lfo /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz
 elif [ "$BUILDPLATFORM" == "linux/arm64" ]; then
@@ -27,10 +30,12 @@ gcloud config set component_manager/disable_update_check true
 gcloud config set metrics/environment github_docker_images
 EOF
 
-WORKDIR /app
+WORKDIR /opt/bigtesty
 
-COPY . .
+COPY --chown=bigtesty: . .
 
-RUN --mount=type=cache,target=/root/.cache/pip pip install -e .
+RUN --mount=type=cache,target=/root/.cache/pip pip install --prefix /usr/local -e .
+
+USER bigtesty
 
 ENTRYPOINT ["bigtesty"]
