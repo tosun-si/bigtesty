@@ -33,4 +33,4 @@ jobs:
         python -m twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
       env:
         TWINE_USERNAME: ${{ vars.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}

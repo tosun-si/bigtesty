@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from typing import List, Dict
 
 from pulumi import automation as auto
@@ -58,25 +59,44 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
     )
     print(f"Update summary: \n{json.dumps(up_res.summary.resource_changes, indent=4)}")
 
-    print("#################### Inserting Test data to Tables...")
-    insert_test_data_to_bq_tables(
-        project_id=project_id,
-        root_test_folder=root_test_folder,
-        datasets_hash=datasets_hash,
-        scenarios=scenarios
-    )
+    reports_result: List[Dict]
+    try:
+        print("#################### Inserting Test data to Tables...")
+        insert_test_data_to_bq_tables(
+            project_id=project_id,
+            root_test_folder=root_test_folder,
+            datasets_hash=datasets_hash,
+            scenarios=scenarios
+        )
 
-    print("#################### Execute SQL queries and generate reports result...")
-    reports_result: List[Dict] = execute_query_and_build_reports_result(
-        project_id=project_id,
-        root_test_folder=root_test_folder,
-        datasets_hash=datasets_hash,
-        scenarios=scenarios
-    )
+        print("#################### Execute SQL queries and generate reports result...")
+        reports_result = execute_query_and_build_reports_result(
+            project_id=project_id,
+            root_test_folder=root_test_folder,
+            datasets_hash=datasets_hash,
+            scenarios=scenarios
+        )
 
-    print("################## The reports result is #################")
-    print(reports_result)
-    print("#################")
+        print("################## The reports result is #################")
+        print(reports_result)
+        print("#################")
+
+    except Exception as e:
+        print(
+            "################# Oops! Error in the pipeline, we will rollback the created ephemeral infra :",
+            file=sys.stderr
+        )
+        print(e, file=sys.stderr)
+
+        stack.destroy(
+            on_output=print,
+            color="always",
+            show_secrets=False,
+            log_flow=True,
+            log_verbosity=3
+        )
+
+        sys.exit(-1)
 
     print("################### Destroying the ephemeral infra and tests assertions...")
     stack.destroy(
