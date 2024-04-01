@@ -1,0 +1,36 @@
+name: Publish Package PyPi Test
+
+on:
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: 3.9.18
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install packages
+        run: |
+          pip install wheel
+          pip install twine
+
+      - name: Build dist
+        run: |
+          python setup.py sdist bdist_wheel
+
+      - name: Publish library to PyPi
+        run: |
+          python -m twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
+        env:
+          TWINE_USERNAME: ${{ vars.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
