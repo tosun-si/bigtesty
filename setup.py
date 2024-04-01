@@ -1,4 +1,11 @@
+import pathlib
+
 from setuptools import find_packages, setup
+
+HOME_DIR = pathlib.Path(__file__).parent
+
+# The text of the README file
+README = (HOME_DIR / "README.md").read_text()
 
 setup(
     name="bigtesty",
@@ -15,5 +22,17 @@ setup(
         "deepdiff==6.3.0",
         "toolz==0.12.0"
     ],
+    description="BigTesty is an integration testing framework for BigQuery",
+    long_description=README,
+    long_description_content_type="text/markdown",
+    url="https://github.com/tosun-si/bigtesty",
+    author="Mazlum TOSUN",
+    author_email="mazlum.tosun@gmail.com",
     packages=find_packages(),
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent"
+    ],
+    python_requires='>=3.9.18',
 )
