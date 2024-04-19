@@ -13,7 +13,7 @@ if os.path.isfile(path):
 
 setup(
     name="bigtesty",
-    version="0.1.0a5",
+    version="0.1.0a7",
     entry_points='''
         [console_scripts]
         bigtesty=bigtesty.cli.main:run
