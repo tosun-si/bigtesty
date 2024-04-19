@@ -16,7 +16,8 @@ from bigtesty.then.assertion_and_tests_reports_result import execute_query_and_b
 
 def launch_tests_ephemeral_infra(root_test_folder: str,
                                  root_tables_folder: str,
-                                 tables_config_file_path: str):
+                                 tables_config_file_path: str,
+                                 destroy_infra: bool):
     project_id = os.environ["GOOGLE_PROJECT"]
     region = os.environ["GOOGLE_REGION"]
     stack_name = os.environ["BIGTESTY_STACK_NAME"]
@@ -98,17 +99,20 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
 
         sys.exit(-1)
 
-    print("################### Destroying the ephemeral infra and tests assertions...")
-    stack.destroy(
-        on_output=print,
-        color="always",
-        show_secrets=False,
-        log_flow=True,
-        log_verbosity=3
-    )
-    print("############### Destroy ephemeral infra complete")
+    print(f"################### Parameter to destroy the infra (true/false) : {destroy_infra}")
 
-    print("############### After destroying the ephemeral infra, checking if there is any failed test...")
+    if destroy_infra:
+        print("################### Destroying the ephemeral infra and tests assertions...")
+        stack.destroy(
+            on_output=print,
+            color="always",
+            show_secrets=False,
+            log_flow=True,
+            log_verbosity=3
+        )
+        print("############### Destroy ephemeral infra complete")
+
+    print("############### Checking if there is any failed test...")
     check_any_failed_test_in_reports(reports_result)
     print("############### Tests assertions finished")
 
