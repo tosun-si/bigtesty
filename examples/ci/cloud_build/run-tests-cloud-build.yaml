@@ -1,0 +1,13 @@
+steps:
+  - name: 'mazlumtosun/bigtesty'
+    script: |
+      bigtesty test \
+      --root-test-folder /workspace/examples/tests \
+      --root-tables-folder /workspace/examples/tests/tables \
+      --tables-config-file /workspace/examples/tests/tables/tables.json
+    env:
+      - 'GOOGLE_PROJECT=$PROJECT_ID'
+      - 'GOOGLE_REGION=$LOCATION'
+      - 'PULUMI_BACKEND_URL=$_IAC_BACKEND_URL'
+      - 'BIGTESTY_STACK_NAME=bigtesty'
+      - 'PULUMI_CONFIG_PASSPHRASE=gcp_fake_passphrase'
