@@ -6,3 +6,4 @@ secrets
 *.pytest_cache
 __pycache__
 *.egg-info
+/venv
