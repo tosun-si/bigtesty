@@ -17,7 +17,7 @@ from bigtesty.then.assertion_and_tests_reports_result import execute_query_and_b
 def launch_tests_ephemeral_infra(root_test_folder: str,
                                  root_tables_folder: str,
                                  tables_config_file_path: str,
-                                 destroy_infra: bool):
+                                 keep_infra: bool):
     project_id = os.environ["GOOGLE_PROJECT"]
     region = os.environ["GOOGLE_REGION"]
     stack_name = os.environ["BIGTESTY_STACK_NAME"]
@@ -99,9 +99,9 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
 
         sys.exit(-1)
 
-    print(f"################### Parameter to destroy the infra (true/false) : {destroy_infra}")
+    print(f"################### Parameter to keep the infra (true/false) : {keep_infra}")
 
-    if destroy_infra:
+    if not keep_infra:
         print("################### Destroying the ephemeral infra and tests assertions...")
         stack.destroy(
             on_output=print,
