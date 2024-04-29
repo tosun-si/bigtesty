@@ -7,6 +7,7 @@ from google.cloud.bigquery import Client
 from toolz.curried import pipe, map
 
 from bigtesty.dataset_helper import build_unique_dataset_id_for_scenario
+from bigtesty.definition_test_config_helper import get_scenario_hash
 from bigtesty.files_loader_helper import load_file_as_string, load_file_as_dicts
 from bigtesty.then.failure_test_exception import FailureTestException
 
@@ -51,7 +52,7 @@ def _execute_query_and_build_report_result(bigquery_python_client: Client,
         print(then)
 
         query = _build_query(
-            scenario_id=scenario["id"],
+            scenario=scenario,
             datasets_hash=datasets_hash,
             root_test_folder=root_test_folder,
             given_list=given_list,
@@ -91,7 +92,7 @@ def _execute_query_and_build_report_result(bigquery_python_client: Client,
         }
 
 
-def _build_query(scenario_id: str,
+def _build_query(scenario: Dict,
                  datasets_hash: str,
                  root_test_folder: str,
                  given_list: List[Dict],
@@ -104,7 +105,7 @@ def _build_query(scenario_id: str,
         sql_query_result = _replace_current_dataset_by_unique_dataset_for_scenario(
             sql_query=sql_query,
             current_dataset=given["destination_dataset"],
-            scenario_id=scenario_id,
+            scenario_hash=get_scenario_hash(scenario),
             datasets_hash=datasets_hash
         )
 
@@ -113,11 +114,11 @@ def _build_query(scenario_id: str,
 
 def _replace_current_dataset_by_unique_dataset_for_scenario(sql_query: str,
                                                             current_dataset: str,
-                                                            scenario_id: str,
+                                                            scenario_hash: str,
                                                             datasets_hash: str) -> str:
     unique_dataset_with_for_scenario = build_unique_dataset_id_for_scenario(
         dataset_id=current_dataset,
-        scenario_id=scenario_id,
+        scenario_hash=scenario_hash,
         datasets_hash=datasets_hash
     )
 

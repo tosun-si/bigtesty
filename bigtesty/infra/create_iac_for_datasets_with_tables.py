@@ -3,6 +3,7 @@ from typing import Dict, List
 from pulumi_gcp.bigquery import Dataset
 
 from bigtesty.dataset_helper import build_unique_dataset_id_for_scenario
+from bigtesty.definition_test_config_helper import get_scenario_hash
 from bigtesty.infra.datasets_with_tables_factory import get_dataset, get_table_with_partitioning, get_table
 
 
@@ -14,7 +15,7 @@ def create_datasets_and_tables(root_tables_folder: str,
         for scenario in scenarios:
             dataset_id_with_hash = build_unique_dataset_id_for_scenario(
                 dataset_id=dataset_config["datasetId"],
-                scenario_id=scenario["id"],
+                scenario_hash=get_scenario_hash(scenario),
                 datasets_hash=datasets_hash
             )
 

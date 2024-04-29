@@ -2,7 +2,6 @@
   "description": "Test of monitoring data",
   "scenarios": [
     {
-      "id": "1240",
       "description": "Nominal case find failure by job name",
       "given": [
         {
