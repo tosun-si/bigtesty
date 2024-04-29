@@ -2,6 +2,8 @@ import glob
 import json
 from typing import List, Dict
 
+from deepdiff import DeepHash
+
 from bigtesty.definition_test_file_exception import DefinitionTestFileException
 from bigtesty.lambda_functions import flat_map
 
@@ -49,3 +51,7 @@ def get_definition_tests_file_paths(data_testing_root_path: str) -> List[str]:
 def to_definition_test_dict(definition_test_file_path: str):
     with open(definition_test_file_path) as definition_test_file:
         return json.load(definition_test_file)
+
+
+def get_scenario_hash(scenario_dict: Dict) -> str:
+    return DeepHash(scenario_dict)[scenario_dict]

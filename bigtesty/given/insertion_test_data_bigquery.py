@@ -3,6 +3,7 @@ from typing import List, Dict
 from google.cloud import bigquery
 
 from bigtesty.dataset_helper import build_unique_dataset_id_for_scenario
+from bigtesty.definition_test_config_helper import get_scenario_hash
 from bigtesty.files_loader_helper import load_file_as_dicts
 
 
@@ -27,7 +28,7 @@ def insert_test_data_to_bq_tables(
 
             dataset_id_with_hash = build_unique_dataset_id_for_scenario(
                 dataset_id=given['destination_dataset'],
-                scenario_id=scenario["id"],
+                scenario_hash=get_scenario_hash(scenario),
                 datasets_hash=datasets_hash
             )
 
