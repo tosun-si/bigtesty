@@ -37,12 +37,10 @@ export TABLES_CONFIG_FILE_PATH=/opt/bigtesty/tests/tables/tables.json
 docker run -it \
    -e GOOGLE_PROJECT=$PROJECT_ID \
    -e GOOGLE_REGION=$LOCATION \
-   -e PULUMI_BACKEND_URL=$IAC_BACKEND_URL \
+   -e IAC_BACKEND_URL=$IAC_BACKEND_URL \
    -e TABLES_CONFIG_FILE="$TABLES_CONFIG_FILE_PATH" \
    -e ROOT_TEST_FOLDER=$ROOT_TEST_FOLDER \
    -e ROOT_TABLES_FOLDER="$ROOT_TABLES_FOLDER" \
-   -e BIGTESTY_STACK_NAME=bigtesty \
-   -e PULUMI_CONFIG_PASSPHRASE=gcp_fake_passphrase \
    -v $(pwd)/examples/tests:/opt/bigtesty/tests \
    -v $(pwd)/examples/tests/tables:/opt/bigtesty/tests/tables \
    -v /var/run/docker.sock:/var/run/docker.sock \
