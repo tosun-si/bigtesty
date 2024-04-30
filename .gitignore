@@ -1,9 +1,31 @@
+# Dependencies
+node_modules
+
+# Production
+build
+
+# IDE
 .idea
 *.iml
+
+# Misc
 .DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 .envrc
 secrets
 *.pytest_cache
 __pycache__
 *.egg-info
 /venv
+
+# Generated files
+.docusaurus
+.cache-loader
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
