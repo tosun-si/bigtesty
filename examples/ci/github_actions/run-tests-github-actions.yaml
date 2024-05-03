@@ -3,9 +3,7 @@ name: Run BigTesty Test
 env:
   GOOGLE_PROJECT: gb-poc-373711
   GOOGLE_REGION: europe-west1
-  PULUMI_BACKEND_URL: gs://gb-poc-pulumi-state/bigtesty
-  BIGTESTY_STACK_NAME: bigtesty
-  PULUMI_CONFIG_PASSPHRASE: gcp_fake_passphrase
+  IAC_BACKEND_URL: gs://gb-poc-pulumi-state/bigtesty
 
   WORKLOAD_IDENTITY_PROVIDER: 'projects/975119474255/locations/global/workloadIdentityPools/gb-github_action-actions-ci-cd-pool/providers/gb-github_action-actions-ci-cd-provider'
   SA_CI_CD_EMAIL: 'sa-bigtesty@gb-poc-373711.iam.gserviceaccount.com'
@@ -46,6 +44,9 @@ jobs:
       - name: 'Run BigTesty Tests'
         run: |
           bigtesty test \
-          --root-test-folder $GITHUB_WORKSPACE/examples/tests \
-          --root-tables-folder $GITHUB_WORKSPACE/examples/tests/tables \
-          --tables-config-file $GITHUB_WORKSPACE/examples/tests/tables/tables.json
+            --project $GOOGLE_PROJECT \
+            --region $GOOGLE_REGION \
+            --iac-backend-url $IAC_BACKEND_URL \
+            --root-test-folder $GITHUB_WORKSPACE/examples/tests \
+            --root-tables-folder $GITHUB_WORKSPACE/examples/tests/tables \
+            --tables-config-file $GITHUB_WORKSPACE/examples/tests/tables/tables.json
