@@ -1,0 +1,8 @@
+{
+  "label": "Installation",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Show the installation of BigQuery with PyPi package and Docker image, then the local tests executions."
+  }
+}

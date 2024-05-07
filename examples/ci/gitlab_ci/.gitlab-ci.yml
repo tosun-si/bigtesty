@@ -11,7 +11,7 @@ stages:
 tests:
   stage: tests
   image:
-    name: "mazlumtosun/bigtesty"
+    name: "groupbees/bigtesty"
     entrypoint: [ "" ]
   when: manual
   script:
