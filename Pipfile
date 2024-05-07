@@ -8,7 +8,7 @@ pytest = "==7.2.1"
 deepdiff = "==6.2.3"
 
 [packages]
-bigtesty = "==0.1.0a8"
+bigtesty = "==0.1.0"
 
 [requires]
 python_version = "3.11"

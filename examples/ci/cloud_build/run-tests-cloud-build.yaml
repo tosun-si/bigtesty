@@ -1,5 +1,5 @@
 steps:
-  - name: 'mazlumtosun/bigtesty'
+  - name: 'groupbees/bigtesty'
     script: |
       bigtesty test \
         --project $PROJECT_ID \

@@ -1,0 +1,8 @@
+{
+  "label": "Tests execution from CI tools",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Show all the tests executions from some existing CI tools."
+  }
+}
