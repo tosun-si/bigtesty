@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import traceback
 from typing import List, Dict
 
 from pulumi import automation as auto
@@ -87,7 +88,9 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
             "################# Oops! Error in the pipeline, we will rollback the created ephemeral infra :",
             file=sys.stderr
         )
-        print(e, file=sys.stderr)
+
+        exception_traceback = ''.join(traceback.format_tb(e.__traceback__))
+        print(exception_traceback, file=sys.stderr)
 
         stack.destroy(
             on_output=print,

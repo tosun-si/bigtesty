@@ -1,0 +1,36 @@
+{
+  "description": "Test of monitoring data with assertion functions",
+  "scenarios": [
+    {
+      "description": "Nominal case find failure by feature name with assertion functions",
+      "given": [
+        {
+          "input_file_path": "monitoring/given/input_failures_feature_name.json",
+          "destination_dataset": "monitoring",
+          "destination_table": "job_failure"
+        }
+      ],
+      "then": [
+        {
+          "assertion_type": "function_assertion",
+          "actual_file_path": "monitoring/when/find_failures_by_feature_name.sql",
+          "expected_file_path": "monitoring/then/expected_failures_feature_name.json",
+          "expected_functions": [
+            {
+              "module": "monitoring/then/assertion_functions/expected_functions.py",
+              "function": "check_actual_matches_expected"
+            },
+            {
+              "module": "monitoring/then/assertion_functions/expected_functions.py",
+              "function": "check_expected_failure_has_feature_name_psg"
+            },
+            {
+              "module": "monitoring/then/assertion_functions/expected_functions_failure_job_name.py",
+              "function": "check_expected_failure_has_job_name_my_job"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
