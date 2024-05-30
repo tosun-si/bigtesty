@@ -15,6 +15,7 @@
           "fields_to_ignore": [
             "\\[\\d+\\]\\['dwhCreationDate']"
           ],
+          "assertion_type": "row_match",
           "actual": "SELECT * FROM `monitoring.job_failure` WHERE jobName = 'jobPSG'",
           "expected": [
             {
