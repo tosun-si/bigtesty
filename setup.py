@@ -13,18 +13,18 @@ if os.path.isfile(path):
 
 setup(
     name="bigtesty",
-    version="0.1.0a7",
+    version="0.1.0a8",
     entry_points='''
         [console_scripts]
         bigtesty=bigtesty.cli.main:run
     ''',
     install_requires=[
-        "pulumi-gcp==6.67.0",
-        "google-cloud-bigquery==3.7.0",
-        "typer[all]==0.9.0",
-        "pytest==7.2.1",
-        "deepdiff==6.3.0",
-        "toolz==0.12.0"
+        "pulumi-gcp==7.24.0",
+        "google-cloud-bigquery==3.23.1",
+        "typer[all]==0.12.3",
+        "pytest==8.2.1",
+        "deepdiff==7.0.1",
+        "toolz==0.12.1"
     ],
     description="BigTesty is an integration testing framework for BigQuery",
     long_description=long_desc,
@@ -38,5 +38,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
     ],
-    python_requires='>=3.9.18',
+    python_requires='>=3.9.19',
 )
