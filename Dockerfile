@@ -1,4 +1,4 @@
-ARG PULUMI_VERSION=3.111.1
+ARG PULUMI_VERSION=3.117.0
 
 FROM pulumi/pulumi-python:${PULUMI_VERSION} AS bigtesty
 
