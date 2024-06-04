@@ -5,7 +5,20 @@
       "description": "Nominal case find failure by job name",
       "given": [
         {
-          "input_file_path": "monitoring/given/input_failures_job_name.json",
+          "input": [
+            {
+              "featureName": "myFeature",
+              "jobName": "jobPSG",
+              "pipelineStep": "myPipeline",
+              "inputElement": "myInputElement",
+              "exceptionType": "myExceptionType",
+              "stackTrace": "myStackTrace",
+              "componentType": "myComponentType",
+              "dwhCreationDate": "2022-05-06 17:38:10",
+              "dagOperator": "myDagOperator",
+              "additionalInfo": "info"
+            }
+          ],
           "destination_dataset": "monitoring",
           "destination_table": "job_failure"
         }
