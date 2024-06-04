@@ -8,10 +8,7 @@ pytest = "==7.2.1"
 deepdiff = "==6.2.3"
 
 [packages]
-pulumi-gcp = "==6.67.0"
-google-cloud-bigquery = "==3.4.2"
-typer = { version = "==0.9.0", extras = ["all"] }
-toolz = "==0.12.0"
+bigtesty = "==0.1.0a8"
 
 [requires]
 python_version = "3.11"
