@@ -40,7 +40,7 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
 
     # for inline programs, we must manage plugins ourselves
     print("Installing plugins...")
-    stack.workspace.install_plugin("gcp", "v6.67.0")
+    stack.workspace.install_plugin("gcp", "v7.24.0")
     print("Plugins installed")
 
     print("Setting up config")
