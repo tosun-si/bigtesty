@@ -19,9 +19,11 @@ def insert_test_data_to_bq_tables(
             print("###### GIVEN")
             print(given)
 
-            input_file_path = f"{root_test_folder}/{given['input_file_path']}"
             input = given.get('input')
-            input_as_dicts: List[Dict] = input if input else load_file_as_dicts(input_file_path)
+            input_as_dicts: List[Dict] = (
+                input if input
+                else load_file_as_dicts(f"{root_test_folder}/{given['input_file_path']}")
+            )
 
             print("####### INPUT AS DICT")
             print(input_as_dicts)
