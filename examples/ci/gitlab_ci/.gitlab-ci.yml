@@ -2,8 +2,6 @@ variables:
   GOOGLE_PROJECT: "gb-poc-373711"
   GOOGLE_REGION: "europe-west1"
   IAC_BACKEND_URL: "gs://gb-poc-pulumi-state/bigtesty"
-  BIGTESTY_STACK_NAME: "bigtesty"
-  PULUMI_CONFIG_PASSPHRASE: "gcp_fake_passphrase"
 
 stages:
   - tests
