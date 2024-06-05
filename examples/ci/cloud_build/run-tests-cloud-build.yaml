@@ -9,6 +9,6 @@ steps:
         --root-tables-folder /workspace/examples/tests/tables \
         --tables-config-file /workspace/examples/tests/tables/tables.json
     env:
-      - 'GOOGLE_PROJECT=$PROJECT_ID'
-      - 'GOOGLE_REGION=$LOCATION'
+      - 'PROJECT_ID=$PROJECT_ID'
+      - 'LOCATION=$LOCATION'
       - 'IAC_BACKEND_URL=$_IAC_BACKEND_URL'
