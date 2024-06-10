@@ -2,11 +2,11 @@ name: Publish Package PyPi
 
 on:
   push:
-    tags: ["*"]
+    tags: ['v*.*.*']
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: 3.9.18
+  PYTHON_VERSION: 3.9.19
 
 jobs:
   publish:
