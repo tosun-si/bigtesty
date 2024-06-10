@@ -2,12 +2,16 @@ name: Release
 
 on:
   push:
-    tags: ['*']
+    tags: ['v*.*.*']
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
