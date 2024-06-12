@@ -197,6 +197,10 @@ gcloud builds submit \
    --verbosity="debug" .
 ```
 
+## Project documentation
+
+Link to the [project documentation](https://tosun-si.github.io/bigtesty/docs/intro/)
+
 ## Contributing
 
 cf. [CONTRIBUTING](CONTRIBUTING.md).
