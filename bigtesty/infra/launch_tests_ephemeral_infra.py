@@ -19,11 +19,11 @@ def launch_tests_ephemeral_infra(root_test_folder: str,
                                  root_tables_folder: str,
                                  tables_config_file_path: str,
                                  keep_infra: bool):
+    datasets_hash = get_datasets_hash(5)
+
     project_id = os.environ["GOOGLE_PROJECT"]
     region = os.environ["GOOGLE_REGION"]
-    stack_name = os.environ["BIGTESTY_STACK_NAME"]
-
-    datasets_hash = get_datasets_hash(5)
+    stack_name = f'{datasets_hash}-{os.environ["BIGTESTY_STACK_NAME"]}'
 
     scenarios = get_scenarios(root_test_folder)
 
