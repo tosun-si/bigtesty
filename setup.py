@@ -13,7 +13,7 @@ if os.path.isfile(path):
 
 setup(
     name="bigtesty",
-    version="0.1.1",
+    version="0.1.0",
     entry_points='''
         [console_scripts]
         bigtesty=bigtesty.cli.main:run
@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "pulumi-gcp==7.24.0",
         "google-cloud-bigquery==3.23.1",
+        "google-cloud-storage==2.17.0",
         "typer[all]==0.12.3",
         "pytest==8.2.1",
         "deepdiff==7.0.1",

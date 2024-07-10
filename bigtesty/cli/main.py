@@ -6,6 +6,7 @@ from typing_extensions import Annotated
 from bigtesty.cli.cli_env_vars import ROOT_TEST_FOLDER_KEY, ROOT_TABLES_FOLDER_KEY, TABLES_CONFIG_FILE_KEY, \
     KEEP_INFRA_KEY, BIGTESTY_STACK_NAME_KEY, PULUMI_CONFIG_PASSPHRASE_KEY, PULUMI_BACKEND_URL_KEY, IAC_BACKEND_URL_KEY, \
     BIGTESTY_STACK_NAME_VALUE, PULUMI_CONFIG_PASSPHRASE_VALUE, GOOGLE_PROJECT_KEY, GOOGLE_REGION_KEY
+from bigtesty.infra.infra_input_params import InfraInputParams
 from bigtesty.infra.launch_tests_ephemeral_infra import launch_tests_ephemeral_infra
 
 app = typer.Typer()
@@ -85,12 +86,18 @@ def run_tests(
     os.environ[PULUMI_CONFIG_PASSPHRASE_KEY] = PULUMI_CONFIG_PASSPHRASE_VALUE
     os.environ[BIGTESTY_STACK_NAME_KEY] = BIGTESTY_STACK_NAME_VALUE
 
-    launch_tests_ephemeral_infra(
+    infra_input_params = InfraInputParams(
+        project_id=project,
+        region=region,
+        stack_name=BIGTESTY_STACK_NAME_VALUE,
         root_test_folder=root_test_folder,
         root_tables_folder=root_tables_folder,
         tables_config_file_path=tables_config_file_path,
+        iac_backend_url=iac_backend_url,
         keep_infra=keep_infra
     )
+
+    launch_tests_ephemeral_infra(infra_input_params)
 
 
 @app.command("help")
