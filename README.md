@@ -13,7 +13,7 @@ result in BigQuery.
 
 After each test, a report result is returned to indicate the good and failure cases.
 
-![bigtesty_pulumi_automation.png](diagram%2Fbigtesty_pulumi_automation.png)
+![bigtesty_schema.png](bigtesty-doc%2Fstatic%2Fimg%2Fbigtesty_schema.png)
 
 ## Getting started
 
