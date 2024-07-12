@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # Introduction
 
+![bigtesty_logo_with_slogan.png](/img/bigtesty_logo_with_slogan.png)
+
 **BigTesty** is a framework that allows to create **Integration Tests** with **BigQuery** on a **real and short-lived Infrastructure**.
 
 Integration and End-to-End tests are a robust way to validate if SQL queries work as expected.\

@@ -1,4 +1,4 @@
-# BigTesty
+![bigtesty_logo_with_slogan.png](bigtesty-doc%2Fstatic%2Fimg%2Fbigtesty_logo_with_slogan.png)
 
 BigTesty is a framework that allows to create Integration Tests with BigQuery on a real and short-lived Infrastructure.
 
@@ -197,7 +197,7 @@ gcloud builds submit \
    --verbosity="debug" .
 ```
 
-## Project documentation
+## Documentation
 
 Link to the [project documentation](https://tosun-si.github.io/bigtesty/docs/intro/)
 
