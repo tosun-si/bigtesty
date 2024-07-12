@@ -62,10 +62,10 @@ const config: Config = {
     // image: 'img/docusaurus-social-card.jpg',
     navbar: {
       title: 'BigTesty',
-      // logo: {
-      //   alt: 'My Site Logo',
-      //   src: 'img/logo.svg',
-      // },
+      logo: {
+        alt: 'BigTesty Logo',
+        src: 'img/bigtesty_logo.png',
+      },
       items: [
         {
           type: 'docSidebar',
