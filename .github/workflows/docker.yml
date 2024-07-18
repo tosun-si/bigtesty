@@ -7,6 +7,10 @@ concurrency:
 on:
   pull_request:
     branches: ['*']
+    paths:
+    - bigtesty/**
+    - .dockerignore
+    - Dockerfile
   push:
     branches: [main]
     tags: ['v*.*.*']

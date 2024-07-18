@@ -1,10 +1,16 @@
 /.git
 /.github
+/bigtesty-doc
 /diagram
+/examples
+/venv
 /.dockerignore
+/.gitignore
+/.pre-commit-config.yaml
 /Dockerfile
 /LICENSE
 /Pipfile
 /Pipfile.lock
 /*.md
-/venv
+*.egg-info
+__pycache__
