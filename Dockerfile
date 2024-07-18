@@ -9,7 +9,8 @@ EOF
 
 WORKDIR /opt/bigtesty
 
-COPY --chown=bigtesty: . .
+COPY --chown=bigtesty: bigtesty bigtesty
+COPY --chown=bigtesty: setup.py .
 
 RUN --mount=type=cache,target=/root/.cache/pip pip install --prefix /usr/local -e .
 
