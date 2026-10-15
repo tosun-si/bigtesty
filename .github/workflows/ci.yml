@@ -54,3 +54,25 @@ jobs:
 
     - name: Unit tests
       run: uv run pytest
+
+  package:
+    name: Build and smoke test the wheel
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: '3.13'
+
+    - name: Build
+      run: uv build
+
+    - name: Install the wheel in a fresh venv and run the CLI
+      run: |
+        uv venv /tmp/smoke
+        uv pip install --python /tmp/smoke dist/*.whl
+        /tmp/smoke/bin/bigtesty version
+        /tmp/smoke/bin/bigtesty test --help
