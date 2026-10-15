@@ -21,6 +21,10 @@ secrets
 __pycache__
 *.egg-info
 /venv
+.venv/
+.ruff_cache/
+.mypy_cache/
+dist/
 
 # Generated files
 .docusaurus

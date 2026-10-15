@@ -1,4 +1,0 @@
-name: bigtesty
-runtime:
-  name: python
-description: The IaC part for the BigTesty project
