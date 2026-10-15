@@ -19,14 +19,12 @@ steps:
       bigtesty test \
         --project $PROJECT_ID \
         --region $LOCATION \
-        --iac-backend-url $IAC_BACKEND_URL \
         --root-test-folder /workspace/examples/tests \
         --root-tables-folder /workspace/examples/tests/tables \
         --tables-config-file /workspace/examples/tests/tables/tables.json
     env:
       - 'PROJECT_ID=$PROJECT_ID'
       - 'LOCATION=$LOCATION'
-      - 'IAC_BACKEND_URL=$_IAC_BACKEND_URL'
 ```
 
 Some explanations:
@@ -39,16 +37,13 @@ Some explanations:
 ```bash
 export PROJECT_ID={{project_id}}
 export LOCATION={{region}}
-export IAC_BACKEND_URL=gs://{{gcs_state_bucket}}/bigtesty
 
 gcloud builds submit \
    --project=$PROJECT_ID \
    --region=$LOCATION \
    --config examples/ci/cloud_build/run-tests-cloud-build.yaml \
-   --substitutions _IAC_BACKEND_URL=$IAC_BACKEND_URL \
    --verbosity="debug" .
 ```
 
 This command line allows to launch the `Cloud Build` job from a local machine:
 - The `yaml` file is referenced with `config` parameter
-- The `IAC_BACKEND_URL` (Cloud Storage path) is passed as external variable via the `substitutions` parameter

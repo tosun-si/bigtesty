@@ -10,7 +10,7 @@ def check_actual_matches_expected(actual: List[Dict], expected: List[Dict]) -> N
     result: Dict = deepdiff.DeepDiff(actual,
                                      expected,
                                      ignore_order=True,
-                                     exclude_regex_paths=[re.compile("\[\d+\]\['dwhCreationDate']")],
+                                     exclude_regex_paths=[re.compile(r"\[\d+\]\['dwhCreationDate']")],
                                      view='tree')
 
     assert result == {}
