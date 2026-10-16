@@ -5,17 +5,43 @@ on:
     tags: ['v*.*.*']
 
 jobs:
-  release:
-    name: Release
+  publish:
+    name: Publish to PyPI
     runs-on: ubuntu-latest
-
+    environment: pypi
     permissions:
-      contents: write
-
+      id-token: write   # PyPI Trusted Publishing (OIDC), no API token
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+
+    - name: Build
+      run: uv build
+
+    - name: Publish
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Release intro = body of the annotated tag message
+      run: |
+        # A shallow checkout can see an annotated tag as lightweight: fetch the tag object itself.
+        git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+        git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents:body)' > release-intro.md
+
     - name: Create release
       uses: softprops/action-gh-release@v2
       with:
+        body_path: release-intro.md
         generate_release_notes: true

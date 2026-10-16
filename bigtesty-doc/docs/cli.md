@@ -28,7 +28,6 @@ Example with an ephemeral infra and only the required options, the command is ex
 bigtesty test \
   --project $PROJECT_ID \
   --region $LOCATION \
-  --iac-backend-url gs://$IAC_BUCKET_STATE/bigtesty \
   --root-test-folder $(pwd)/examples/tests \
   --root-tables-folder $(pwd)/examples/tests/tables \
   --tables-config-file $(pwd)/examples/tests/tables/tables.json
@@ -41,7 +40,6 @@ bigtesty test \
   --project $PROJECT_ID \
   --region $LOCATION \
   --keep-infra \
-  --iac-backend-url gs://$IAC_BUCKET_STATE/bigtesty \
   --root-test-folder $(pwd)/examples/tests \
   --root-tables-folder $(pwd)/examples/tests/tables \
   --tables-config-file $(pwd)/examples/tests/tables/tables.json
@@ -53,7 +51,6 @@ Instead of passing the options by the CLI, we can also pass them with environmen
 export PROJECT_ID={{project_id}}
 export LOCATION={{region}}
 export KEEP_INFRA=true
-export IAC_BACKEND_URL=gs://{{gcs_state_bucket}}/bigtesty
 export ROOT_TEST_FOLDER=$(pwd)/examples/tests
 export ROOT_TABLES_FOLDER=$(pwd)/examples/tests/tables
 export TABLES_CONFIG_FILE_PATH=$(pwd)/examples/tests/tables/tables.json

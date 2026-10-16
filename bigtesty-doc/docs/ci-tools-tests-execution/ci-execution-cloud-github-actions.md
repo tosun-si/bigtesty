@@ -18,7 +18,6 @@ name: Run BigTesty Test
 env:
   GOOGLE_PROJECT: { PROJECT_ID }
   GOOGLE_REGION: { REGION }
-  IAC_BACKEND_URL: { IAC_BACKEND_URL }
 
   WORKLOAD_IDENTITY_PROVIDER: {WORKLOAD_IDENTITY_PROVIDER_URL}
   SA_CI_CD_EMAIL: {SA_EMAIL}
@@ -53,7 +52,7 @@ jobs:
           cache: 'pip'
 
       - name: 'Set up BigTesty'
-        run: pip install -r requirements.txt
+        run: pip install bigtesty
         shell: bash
 
       - name: 'Run BigTesty Tests'
@@ -61,7 +60,6 @@ jobs:
           bigtesty test \
             --project $GOOGLE_PROJECT \
             --region $GOOGLE_REGION \
-            --iac-backend-url $IAC_BACKEND_URL \
             --root-test-folder $GITHUB_WORKSPACE/examples/tests \
             --root-tables-folder $GITHUB_WORKSPACE/examples/tests/tables \
             --tables-config-file $GITHUB_WORKSPACE/examples/tests/tables/tables.json

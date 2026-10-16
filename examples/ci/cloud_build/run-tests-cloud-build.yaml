@@ -4,11 +4,9 @@ steps:
       bigtesty test \
         --project $PROJECT_ID \
         --region $LOCATION \
-        --iac-backend-url $IAC_BACKEND_URL \
         --root-test-folder /workspace/examples/tests \
         --root-tables-folder /workspace/examples/tests/tables \
         --tables-config-file /workspace/examples/tests/tables/tables.json
     env:
       - 'PROJECT_ID=$PROJECT_ID'
       - 'LOCATION=$LOCATION'
-      - 'IAC_BACKEND_URL=$_IAC_BACKEND_URL'

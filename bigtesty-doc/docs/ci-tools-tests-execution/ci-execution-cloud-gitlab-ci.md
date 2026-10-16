@@ -16,7 +16,6 @@ An example of `yaml` file:
 variables:
   GOOGLE_PROJECT: $PROJECT_ID
   GOOGLE_REGION: $REGION
-  IAC_BACKEND_URL: $IAC_BACKEND_URL
 
 stages:
   - tests
@@ -32,7 +31,6 @@ tests:
       bigtesty test \
         --project $GOOGLE_PROJECT \
         --region $GOOGLE_REGION \
-        --iac-backend-url $IAC_BACKEND_URL \
         --root-test-folder $CI_PROJECT_DIR/examples/tests \
         --root-tables-folder $CI_PROJECT_DIR/examples/tests/tables \
         --tables-config-file $CI_PROJECT_DIR/examples/tests/tables/tables.json

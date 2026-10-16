@@ -36,7 +36,6 @@ After installed the `BigTesty` package, we can launch the tests with the CLI:
 bigtesty test \
   --project $PROJECT_ID \
   --region $LOCATION \
-  --iac-backend-url gs://$IAC_BUCKET_STATE/bigtesty \
   --root-test-folder $(pwd)/examples/tests \
   --root-tables-folder $(pwd)/examples/tests/tables \
   --tables-config-file $(pwd)/examples/tests/tables/tables.json

@@ -1,7 +1,6 @@
 variables:
   GOOGLE_PROJECT: "gb-poc-373711"
   GOOGLE_REGION: "europe-west1"
-  IAC_BACKEND_URL: "gs://gb-poc-pulumi-state/bigtesty"
 
 stages:
   - tests
@@ -17,7 +16,6 @@ tests:
       bigtesty test \
         --project $GOOGLE_PROJECT \
         --region $GOOGLE_REGION \
-        --iac-backend-url $IAC_BACKEND_URL \
         --root-test-folder $CI_PROJECT_DIR/examples/tests \
         --root-tables-folder $CI_PROJECT_DIR/examples/tests/tables \
         --tables-config-file $CI_PROJECT_DIR/examples/tests/tables/tables.json

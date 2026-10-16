@@ -1,0 +1,15 @@
+# Copy to .envrc and run `direnv allow`.
+
+# venv auto-activation (uv-managed)
+if [ ! -d ".venv" ]; then
+  echo "Creating .venv with uv..."
+  uv venv
+fi
+export VIRTUAL_ENV="$(pwd)/.venv"
+PATH_add "$VIRTUAL_ENV/bin"
+
+export GOOGLE_PROJECT=<gcp_project_id>
+export GOOGLE_REGION=EU
+export ROOT_TEST_FOLDER="$(pwd)/examples/tests"
+export ROOT_TABLES_FOLDER="$(pwd)/examples/tests/tables"
+export TABLES_CONFIG_FILE="$(pwd)/examples/tests/tables/tables.json"

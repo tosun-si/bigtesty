@@ -33,28 +33,26 @@ gcloud auth application-default login
 ```bash
 export PROJECT_ID={{project_id}}
 export LOCATION={{region}}
-export IAC_BACKEND_URL=gs://{{gcs_state_bucket}}/bigtesty
-export ROOT_TEST_FOLDER=/opt/bigtesty/tests
-export ROOT_TABLES_FOLDER=/opt/bigtesty/tests/tables
-export TABLES_CONFIG_FILE_PATH=/opt/bigtesty/tests/tables/tables.json
+export ROOT_TEST_FOLDER=/usr/local/src/app/tests
+export ROOT_TABLES_FOLDER=/usr/local/src/app/tests/tables
+export TABLES_CONFIG_FILE_PATH=/usr/local/src/app/tests/tables/tables.json
 
 docker run -it \
    -e GOOGLE_PROJECT=$PROJECT_ID \
    -e GOOGLE_REGION=$LOCATION \
-   -e IAC_BACKEND_URL=$IAC_BACKEND_URL \
    -e TABLES_CONFIG_FILE="$TABLES_CONFIG_FILE_PATH" \
    -e ROOT_TEST_FOLDER=$ROOT_TEST_FOLDER \
    -e ROOT_TABLES_FOLDER="$ROOT_TABLES_FOLDER" \
-   -v $(pwd)/examples/tests:/opt/bigtesty/tests \
-   -v $(pwd)/examples/tests/tables:/opt/bigtesty/tests/tables \
-   -v $HOME/.config/gcloud:/opt/bigtesty/.config/gcloud \
+   -v $(pwd)/examples/tests:/usr/local/src/app/tests \
+   -v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables \
+   -v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud \
    groupbees/bigtesty test
 ```
 
 With `Docker`, we need to mount as volume all the needed folders:
-- The root testing folder: `v $(pwd)/examples/tests:/opt/bigtesty/tests`
-- The root tables folder: `v $(pwd)/examples/tests/tables:/opt/bigtesty/tests/tables`
+- The root testing folder: `v $(pwd)/examples/tests:/usr/local/src/app/tests`
+- The root tables folder: `v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables`
 
 To prevent the use of a long-lived service account token key for local executions with `Docker`, we need to share the local
 `gcloud` configuration with the container and mount it as volume:
-- The local `gcloud` configuration: `$HOME/.config/gcloud:/opt/bigtesty/.config/gcloud`
+- The local `gcloud` configuration: `$HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`

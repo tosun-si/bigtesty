@@ -2,20 +2,31 @@
 
 ## Prerequisites
 
-- [python](https://www.python.org/)
+- [python](https://www.python.org/) 3.11+
+- [uv](https://docs.astral.sh/uv/)
 - [pre-commit](https://pre-commit.com/)
-- [pipenv](https://pipenv.pypa.io/en/latest/)
+- [direnv](https://direnv.net/) (optional, see `.envrc.example`)
 
 ## How to run
 
 ```bash
 git clone https://github.com/tosun-si/bigtesty
-pipenv shell
-pip install -e .
+cd bigtesty
+uv sync
+uv run bigtesty --help
+```
+
+## Checks
+
+```bash
+uv run ruff check src tests
+uv run ruff format --check src tests
+uv run mypy src
+uv run pytest
 ```
 
 ## Docker build
 
 ```bash
-docker build -t mazlumtosum/bigtesty .
+docker build -t groupbees/bigtesty .
 ```

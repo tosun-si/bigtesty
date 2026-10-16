@@ -1,0 +1,78 @@
+name: CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['*']
+
+jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3'
+
+    - name: Run pre-commit
+      uses: pre-commit/action@v3.0.1
+
+  checks:
+    name: Lint, types and unit tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+        enable-cache: true
+
+    - name: Install dependencies
+      run: uv sync --frozen
+
+    - name: Ruff
+      run: |
+        uv run ruff check src tests
+        uv run ruff format --check src tests
+
+    - name: Mypy
+      run: uv run mypy src
+
+    - name: Unit tests
+      run: uv run pytest
+
+  package:
+    name: Build and smoke test the wheel
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: '3.13'
+
+    - name: Build
+      run: uv build
+
+    - name: Install the wheel in a fresh venv and run the CLI
+      run: |
+        uv venv /tmp/smoke
+        uv pip install --python /tmp/smoke dist/*.whl
+        /tmp/smoke/bin/bigtesty version
+        /tmp/smoke/bin/bigtesty test --help

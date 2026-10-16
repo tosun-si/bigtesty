@@ -1,0 +1,58 @@
+[build-system]
+requires = ["uv_build>=0.8,<0.13"]
+build-backend = "uv_build"
+
+[project]
+name = "bigtesty"
+version = "0.2.0"
+description = "BigTesty is an integration testing framework for BigQuery"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Mazlum TOSUN", email = "mazlum.tosun@gmail.com" }]
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Database",
+]
+dependencies = [
+    "deepdiff>=7.0",
+    "google-cloud-bigquery>=3.25",
+    "typer>=0.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/tosun-si/bigtesty"
+Documentation = "https://tosun-si.github.io/bigtesty"
+Repository = "https://github.com/tosun-si/bigtesty"
+Changelog = "https://github.com/tosun-si/bigtesty/releases"
+
+[project.scripts]
+bigtesty = "bigtesty.cli.main:run"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11",
+    "pytest>=8.2",
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true

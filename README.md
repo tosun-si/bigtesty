@@ -17,11 +17,25 @@ After each test, a report result is returned to indicate the good and failure ca
 
 ## Getting started
 
-There is a `Python` package for BigTesty and it can be installed from `PiPy`:
+There is a `Python` package for BigTesty (Python 3.11+) and it can be installed from `PyPI`:
 
 ```bash
 pip install bigtesty
 ```
+
+## Migrating from 0.1.x to 0.2.0
+
+The version `0.2.0` removes Pulumi and contains breaking changes:
+
+- The `--iac-backend-url` option and the `IAC_BACKEND_URL` env var are removed: the ephemeral infra is created and
+  destroyed directly with the BigQuery client, no state bucket is needed anymore.
+- Python 3.11+ is required.
+- In the Docker image, the working and home directory is now `/usr/local/src/app` instead of `/opt/bigtesty`
+  (mount the gcloud config in `/usr/local/src/app/.config/gcloud`).
+- The test data are loaded with load jobs instead of streaming inserts: the data are immediately available for DML
+  statements, and a row not matching the table schema now fails the run.
+- All the `then` blocks of a scenario are evaluated (only the first one was evaluated before).
+- `assertion_type` is optional and defaults to `row_match`, `fields_to_ignore` is optional.
 
 ## How to run tests
 
@@ -123,11 +137,11 @@ We need to pass the 3 parameters indicated in the previous section, in the comma
 
 Also, common GCP parameters like:
 - project: the GCP project ID
-- region: the GCP region
+- region: the default BigQuery location, used for the datasets that don't define a `datasetRegion`
 
-`BigTesty` uses an ephemeral infra internally via the concept of Infra As Code and the backend to host the state must be a `cloud Storage` bucket.\
-We need to pass the backend URL via parameter in the CLI:
-- iac-backend-url
+BigTesty creates an ephemeral infra for each run, directly with the BigQuery client: one isolated dataset per\
+configured dataset and per scenario, labelled with `bigtesty_run_id`. There is no IaC backend or state bucket to manage.\
+As a safety net, the tables of these datasets expire after 6 hours if the process is killed before the cleanup.
 
 The tests can be executed with the following command line:
 
@@ -135,7 +149,6 @@ The tests can be executed with the following command line:
 bigtesty test \
   --project $PROJECT_ID \
   --region $LOCATION \
-  --iac-backend-url gs://$IAC_BUCKET_STATE/bigtesty \
   --root-test-folder $(pwd)/examples/tests \
   --root-tables-folder $(pwd)/examples/tests/tables \
   --tables-config-file $(pwd)/examples/tests/tables/tables.json
@@ -150,21 +163,19 @@ Instead of pass the arguments by the CLI, we can also pass them with environment
 ```bash
 export PROJECT_ID={{project_id}}
 export LOCATION={{region}}
-export IAC_BACKEND_URL=gs://{{gcs_state_bucket}}/bigtesty
-export ROOT_TEST_FOLDER=/opt/bigtesty/tests
-export ROOT_TABLES_FOLDER=/opt/bigtesty/tests/tables
-export TABLES_CONFIG_FILE_PATH=/opt/bigtesty/tests/tables/tables.json
+export ROOT_TEST_FOLDER=/usr/local/src/app/tests
+export ROOT_TABLES_FOLDER=/usr/local/src/app/tests/tables
+export TABLES_CONFIG_FILE_PATH=/usr/local/src/app/tests/tables/tables.json
 
 docker run -it \
    -e GOOGLE_PROJECT=$PROJECT_ID \
    -e GOOGLE_REGION=$LOCATION \
-   -e IAC_BACKEND_URL=$IAC_BACKEND_URL \
    -e TABLES_CONFIG_FILE="$TABLES_CONFIG_FILE_PATH" \
    -e ROOT_TEST_FOLDER=$ROOT_TEST_FOLDER \
    -e ROOT_TABLES_FOLDER="$ROOT_TABLES_FOLDER" \
-   -v $(pwd)/examples/tests:/opt/bigtesty/tests \
-   -v $(pwd)/examples/tests/tables:/opt/bigtesty/tests/tables \
-   -v $HOME/.config/gcloud:/opt/bigtesty/.config/gcloud \
+   -v $(pwd)/examples/tests:/usr/local/src/app/tests \
+   -v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables \
+   -v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud \
    groupbees/bigtesty test
 ```
 
@@ -172,14 +183,14 @@ Some explanations:
 
 All the parameters are passed as environment variables.\
 We need also to mount as volumes:
-- the tests root folder : `-v $(pwd)/examples/tests:/opt/bigtesty/tests`
-- the tables root folder: `-v $(pwd)/examples/tests/tables:/opt/bigtesty/tests/tables`
-- the `gcloud` configuration: `-v $HOME/.config/gcloud:/opt/bigtesty/.config/gcloud`
+- the tests root folder : `-v $(pwd)/examples/tests:/usr/local/src/app/tests`
+- the tables root folder: `-v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables`
+- the `gcloud` configuration: `-v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`
 
 When the authentication is done with Applications Default Credentials via the following command `gcloud auth application-default login`,\
 a short-lived credential is generated in the local `gcloud` configuration: `$HOME/.config/gcloud`
 
-To prevent the use of a long-lived SA token key, we can share and mount as volume the local `gcloud` configuration with the `Docker` container: `-v $HOME/.config/gcloud:/opt/bigtesty/.config/gcloud`\
+To prevent the use of a long-lived SA token key, we can share and mount as volume the local `gcloud` configuration with the `Docker` container: `-v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`\
 With this technic, the container will be authenticated in Google Cloud securely, with your current user in the Shell session.
 
 ### Run with Cloud Build
@@ -187,13 +198,11 @@ With this technic, the container will be authenticated in Google Cloud securely,
 ```bash
 export PROJECT_ID={{project_id}}
 export LOCATION={{region}}
-export IAC_BACKEND_URL=gs://{{gcs_state_bucket}}/bigtesty
 
 gcloud builds submit \
    --project=$PROJECT_ID \
    --region=$LOCATION \
    --config examples/ci/cloud_build/run-tests-cloud-build.yaml \
-   --substitutions _IAC_BACKEND_URL=$IAC_BACKEND_URL \
    --verbosity="debug" .
 ```
 
