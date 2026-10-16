@@ -19,6 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Testing",
     "Topic :: Database",
+    "Framework :: Pytest",
 ]
 dependencies = [
     "deepdiff>=7.0",
@@ -36,6 +37,9 @@ Changelog = "https://github.com/tosun-si/bigtesty/releases"
 
 [project.scripts]
 bigtesty = "bigtesty.cli.main:run"
+
+[project.entry-points.pytest11]
+bigtesty = "bigtesty.pytest_plugin"
 
 [dependency-groups]
 dev = [

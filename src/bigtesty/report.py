@@ -50,7 +50,7 @@ def format_run_report(run_report: RunReport) -> str:
             f"{'PASSED' if r.passed else 'FAILED'}  {r.scenario_id}  ({r.duration_seconds:.1f}s)"
             for r in run_report.scenario_reports
         ),
-        *(line for report in run_report.failed_reports for line in _format_failure(report)),
+        *(line for report in run_report.failed_reports for line in format_scenario_failure(report)),
         "",
         f"{len(run_report.scenario_reports) - len(run_report.failed_reports)} passed, "
         f"{len(run_report.failed_reports)} failed (run {run_report.run_id})",
@@ -58,7 +58,7 @@ def format_run_report(run_report: RunReport) -> str:
     return "\n".join(lines)
 
 
-def _format_failure(report: ScenarioReport) -> list[str]:
+def format_scenario_failure(report: ScenarioReport) -> list[str]:
     header = ["", f"________ {report.scenario_id} ________"]
 
     if report.error is not None:

@@ -76,6 +76,26 @@ def build_run_plan(
     The CLI values (project_id, location) take precedence over the config ones.
     `select` keeps only the scenarios whose ID contains the given text.
     """
+    tests_dir = config_path.parent / config.tests
+
+    selected_scenarios = [
+        (spec_path, scenario)
+        for spec_path, spec_file in spec_files
+        for scenario in spec_file.scenarios
+        if select is None or select in scenario_id(tests_dir, spec_path, scenario.name)
+    ]
+
+    return build_run_plan_for_scenarios(config_path, config, selected_scenarios, project_id, location)
+
+
+def build_run_plan_for_scenarios(
+    config_path: Path,
+    config: ProjectConfig,
+    scenarios: list[tuple[Path, ScenarioSpec]],
+    project_id: str | None = None,
+    location: str | None = None,
+) -> RunPlan:
+    """Resolves the config and the given scenarios, with the path of their test file, into a RunPlan."""
     resolved_project_id = project_id or config.project
     if not resolved_project_id:
         raise SpecError("The GCP project is missing: set it in the config file or with --project")
@@ -84,14 +104,6 @@ def build_run_plan(
     tests_dir = config_dir / config.tests
     dataset_ids = {dataset.id for dataset in config.datasets}
 
-    selected_scenarios = [
-        (scenario_id, spec_path, scenario)
-        for spec_path, spec_file in spec_files
-        for scenario in spec_file.scenarios
-        if (scenario_id := f"{spec_path.relative_to(tests_dir).as_posix()}::{scenario.name}")
-        if select is None or select in scenario_id
-    ]
-
     return RunPlan(
         project_id=resolved_project_id,
         project_aliases=tuple(config.project_aliases),
@@ -99,14 +111,23 @@ def build_run_plan(
             to_dataset_plan(config_dir, dataset, location or config.location) for dataset in config.datasets
         ),
         scenarios=tuple(
-            to_scenario_plan(scenario_id, index, spec_path.parent, scenario, dataset_ids)
-            for index, (scenario_id, spec_path, scenario) in enumerate(selected_scenarios)
+            to_scenario_plan(
+                scenario_id(tests_dir, spec_path, scenario.name), index, spec_path.parent, scenario, dataset_ids
+            )
+            for index, (spec_path, scenario) in enumerate(scenarios)
         ),
         cleanup=config.cleanup,
         max_bytes_billed=config.max_bytes_billed,
         table_expiration_hours=config.table_expiration_hours,
         max_workers=config.max_workers,
     )
+
+
+def scenario_id(tests_dir: Path, spec_path: Path, scenario_name: str) -> str:
+    """`<test file path relative to the tests directory>::<scenario name>`, the absolute path outside of it."""
+    relative_path = spec_path.relative_to(tests_dir) if spec_path.is_relative_to(tests_dir) else spec_path
+
+    return f"{relative_path.as_posix()}::{scenario_name}"
 
 
 def to_dataset_plan(config_dir: Path, dataset: DatasetSpec, default_location: str | None) -> DatasetPlan:
