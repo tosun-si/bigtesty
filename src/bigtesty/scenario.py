@@ -68,7 +68,11 @@ def _run_query(context: RunContext, scenario: ScenarioPlan, sql: str) -> bigquer
     query = scenario_sql(context, scenario, sql)
     logger.debug("[%s] Executing:\n%s", scenario.scenario_id, query)
 
-    job_config = bigquery.QueryJobConfig(labels=context.labels, maximum_bytes_billed=context.plan.max_bytes_billed)
+    # Not passed when unset: QueryJobConfig(maximum_bytes_billed=None) sends the string "None", rejected by BigQuery.
+    max_bytes_billed = context.plan.max_bytes_billed
+    job_config = bigquery.QueryJobConfig(
+        labels=context.labels, **({"maximum_bytes_billed": max_bytes_billed} if max_bytes_billed else {})
+    )
     return context.client.query(query, job_config=job_config).result()
 
 

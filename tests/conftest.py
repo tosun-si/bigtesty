@@ -39,6 +39,7 @@ class FakeBigQueryClient:
     deleted_datasets: list[str] = field(default_factory=list)
     loads: list[dict[str, Any]] = field(default_factory=list)
     queries: list[str] = field(default_factory=list)
+    query_job_configs: list[bigquery.QueryJobConfig] = field(default_factory=list)
     events: list[str] = field(default_factory=list)
 
     def create_dataset(self, dataset: bigquery.Dataset) -> bigquery.Dataset:
@@ -68,6 +69,7 @@ class FakeBigQueryClient:
 
     def query(self, query: str, job_config: bigquery.QueryJobConfig) -> FakeJob:
         self.queries.append(query)
+        self.query_job_configs.append(job_config)
         self.events.append(f"query {query}")
         return FakeJob(self.query_handler(query))
 

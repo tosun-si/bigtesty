@@ -15,9 +15,11 @@ JOB_FAILURE_RESULT = FakeRowIterator(
 )
 
 
-def _plan(tmp_path, cleanup="always"):
+def _plan(tmp_path, cleanup="always", max_bytes_billed=None):
     config_path = write_project(tmp_path)
-    config = load_model(config_path, ProjectConfig).model_copy(update={"cleanup": cleanup})
+    config = load_model(config_path, ProjectConfig).model_copy(
+        update={"cleanup": cleanup, "max_bytes_billed": max_bytes_billed}
+    )
     return build_run_plan(config_path, config, load_spec_files(tmp_path / "tests"))
 
 
@@ -106,3 +108,26 @@ def test_given_cleanup_mode_when_run_tests_then_infra_is_destroyed_accordingly(
 
     # THEN
     assert bool(client.deleted_datasets) is destroyed
+
+
+@pytest.mark.parametrize(
+    ("max_bytes_billed", "expected_api_value"),
+    [
+        # --- Case 1: no limit in the config, the field is not sent ---
+        (None, None),
+        # --- Case 2: a limit in the config ---
+        (1000, "1000"),
+    ],
+)
+def test_given_max_bytes_billed_when_run_tests_then_query_jobs_have_the_limit(
+    tmp_path, max_bytes_billed, expected_api_value
+):
+    # GIVEN
+    client = _client({_select_job_failure(0): JOB_FAILURE_RESULT})
+
+    # WHEN
+    run_tests(client, _plan(tmp_path, max_bytes_billed=max_bytes_billed), "abc")
+
+    # THEN
+    api_values = {config.to_api_repr()["query"].get("maximumBytesBilled") for config in client.query_job_configs}
+    assert api_values == {expected_api_value}
