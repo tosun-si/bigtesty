@@ -10,7 +10,7 @@ bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty schema -o schemas         # write the JSON Schemas of the config and test files
-bigtesty version
+bigtesty --version                 # or bigtesty version
 ```
 
 ## `bigtesty test`

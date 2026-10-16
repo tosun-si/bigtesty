@@ -44,9 +44,9 @@ jobs:
           service_account: '${{ env.SA_CI_CD_EMAIL }}'
 
       - name: 'Install Python'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.13'
           cache: 'pip'
 
       - name: 'Set up BigTesty'
