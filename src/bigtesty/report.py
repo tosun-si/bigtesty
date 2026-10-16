@@ -1,0 +1,79 @@
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    check: str
+    passed: bool
+    message: str = ""
+
+
+@dataclass(frozen=True)
+class ThenReport:
+    name: str
+    checks: tuple[CheckResult, ...]
+
+    @property
+    def passed(self) -> bool:
+        return all(check.passed for check in self.checks)
+
+
+@dataclass(frozen=True)
+class ScenarioReport:
+    scenario_id: str
+    then_reports: tuple[ThenReport, ...]
+    duration_seconds: float
+    error: str | None = None
+
+    @property
+    def passed(self) -> bool:
+        return self.error is None and all(then_report.passed for then_report in self.then_reports)
+
+
+@dataclass(frozen=True)
+class RunReport:
+    run_id: str
+    scenario_reports: tuple[ScenarioReport, ...]
+
+    @property
+    def passed(self) -> bool:
+        return all(report.passed for report in self.scenario_reports)
+
+    @property
+    def failed_reports(self) -> tuple[ScenarioReport, ...]:
+        return tuple(report for report in self.scenario_reports if not report.passed)
+
+
+def format_run_report(run_report: RunReport) -> str:
+    lines = [
+        *(
+            f"{'PASSED' if r.passed else 'FAILED'}  {r.scenario_id}  ({r.duration_seconds:.1f}s)"
+            for r in run_report.scenario_reports
+        ),
+        *(line for report in run_report.failed_reports for line in _format_failure(report)),
+        "",
+        f"{len(run_report.scenario_reports) - len(run_report.failed_reports)} passed, "
+        f"{len(run_report.failed_reports)} failed (run {run_report.run_id})",
+    ]
+    return "\n".join(lines)
+
+
+def _format_failure(report: ScenarioReport) -> list[str]:
+    header = ["", f"________ {report.scenario_id} ________"]
+
+    if report.error is not None:
+        return [*header, report.error]
+
+    return [
+        *header,
+        *(
+            f"{then_report.name} / {check.check}:\n{_indent(check.message)}"
+            for then_report in report.then_reports
+            for check in then_report.checks
+            if not check.passed
+        ),
+    ]
+
+
+def _indent(text: str) -> str:
+    return "\n".join(f"    {line}" for line in text.splitlines())

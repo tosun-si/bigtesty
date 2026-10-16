@@ -1,0 +1,326 @@
+{
+  "$defs": {
+    "AssertionFunctionSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "module": {
+          "description": "Python file containing the function.",
+          "title": "Module",
+          "type": "string"
+        },
+        "function": {
+          "description": "Function called with (actual_rows, expected_rows), raising AssertionError.",
+          "title": "Function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "function"
+      ],
+      "title": "AssertionFunctionSpec",
+      "type": "object"
+    },
+    "GivenSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "table": {
+          "description": "Table to load, as dataset.table.",
+          "pattern": "^[A-Za-z0-9_]+\\.[A-Za-z0-9_\\-$]+$",
+          "title": "Table",
+          "type": "string"
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rows"
+        },
+        "rows_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "JSON or YAML file containing a list of rows.",
+          "title": "Rows File"
+        }
+      },
+      "required": [
+        "table"
+      ],
+      "title": "GivenSpec",
+      "type": "object"
+    },
+    "ScenarioSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "given": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GivenSpec"
+          },
+          "title": "Given",
+          "type": "array"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WhenSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "then": {
+          "items": {
+            "$ref": "#/$defs/ThenSpec"
+          },
+          "minItems": 1,
+          "title": "Then",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "then"
+      ],
+      "title": "ScenarioSpec",
+      "type": "object"
+    },
+    "ThenSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Query"
+        },
+        "query_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Query File"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_]+\\.[A-Za-z0-9_\\-$]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Shortcut for SELECT * FROM dataset.table.",
+          "title": "Table"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected"
+        },
+        "expected_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected File"
+        },
+        "row_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Row Count"
+        },
+        "functions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/AssertionFunctionSpec"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "ignore_order": {
+          "default": true,
+          "title": "Ignore Order",
+          "type": "boolean"
+        },
+        "ignore_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Ignore Columns",
+          "type": "array"
+        },
+        "compare_columns": {
+          "default": "all",
+          "description": "expected_only compares only the columns present in the expected rows.",
+          "enum": [
+            "all",
+            "expected_only"
+          ],
+          "title": "Compare Columns",
+          "type": "string"
+        },
+        "float_tolerance": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Float Tolerance"
+        }
+      },
+      "title": "ThenSpec",
+      "type": "object"
+    },
+    "WhenSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "sql": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SQL executed as a script: DML, MERGE, CALL, multi-statements...",
+          "title": "Sql"
+        },
+        "sql_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sql File"
+        }
+      },
+      "title": "WhenSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "scenarios": {
+      "items": {
+        "$ref": "#/$defs/ScenarioSpec"
+      },
+      "minItems": 1,
+      "title": "Scenarios",
+      "type": "array"
+    }
+  },
+  "required": [
+    "scenarios"
+  ],
+  "title": "SpecFile",
+  "type": "object"
+}

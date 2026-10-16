@@ -1,84 +1,86 @@
-from google.cloud.bigquery import SchemaField
+from datetime import UTC, datetime, timedelta
+
+from helpers import write_project
 
 from bigtesty.infra.ephemeral_infra import (
     BIGTESTY_RUN_ID_LABEL_KEY,
-    DEFAULT_TABLE_EXPIRATION_MS,
     build_ephemeral_datasets,
     create_ephemeral_infra,
     destroy_ephemeral_infra,
+    destroy_expired_datasets,
 )
-from bigtesty.infra.tables_config import DatasetConfig, TableConfig
-
-PARTITIONED_TABLE = TableConfig(
-    table_id="job_failure",
-    schema=(SchemaField("featureName", "STRING"), SchemaField("dwhCreationDate", "TIMESTAMP")),
-    partition_type="DAY",
-    partition_field="dwhCreationDate",
-    clustering=("featureName",),
-)
-
-DATASETS_CONFIG = (
-    DatasetConfig(
-        dataset_id="monitoring", location="EU", friendly_name=None, description=None, tables=(PARTITIONED_TABLE,)
-    ),
-    DatasetConfig(dataset_id="referential", location=None, friendly_name=None, description=None, tables=()),
-)
+from bigtesty.spec.loader import build_run_plan, load_model, load_spec_files
+from bigtesty.spec.models import ProjectConfig
 
 
-def test_given_two_datasets_and_two_scenarios_when_build_ephemeral_datasets_then_one_dataset_per_scenario():
+def _plan(tmp_path):
+    config_path = write_project(tmp_path)
+    config = load_model(config_path, ProjectConfig)
+    return build_run_plan(config_path, config, load_spec_files(tmp_path / "tests"))
+
+
+def test_given_one_dataset_and_two_scenarios_when_build_ephemeral_datasets_then_one_dataset_per_scenario(tmp_path):
     # WHEN
-    ephemeral_datasets = build_ephemeral_datasets("my-project", "europe-west1", "abc", 2, DATASETS_CONFIG)
+    ephemeral_datasets = build_ephemeral_datasets(_plan(tmp_path), "abc")
 
     # THEN
-    assert [(d.full_dataset_id, d.location) for d in ephemeral_datasets] == [
-        ("my-project.monitoring_abc_0", "EU"),
-        ("my-project.monitoring_abc_1", "EU"),
-        ("my-project.referential_abc_0", "europe-west1"),
-        ("my-project.referential_abc_1", "europe-west1"),
+    assert [d.full_dataset_id for d in ephemeral_datasets] == [
+        "test-project.monitoring_abc_0",
+        "test-project.monitoring_abc_1",
     ]
 
 
-def test_given_ephemeral_datasets_when_create_ephemeral_infra_then_datasets_are_labelled_with_expiration(fake_client):
-    # GIVEN
-    ephemeral_datasets = build_ephemeral_datasets("my-project", "EU", "abc", 1, DATASETS_CONFIG)
-
+def test_given_plan_when_create_ephemeral_infra_then_datasets_are_labelled_with_expiration(tmp_path, fake_client):
     # WHEN
-    create_ephemeral_infra(fake_client, "abc", ephemeral_datasets)
+    create_ephemeral_infra(fake_client, _plan(tmp_path), "abc")
 
     # THEN
-    assert all(
-        d.labels[BIGTESTY_RUN_ID_LABEL_KEY] == "abc" and d.default_table_expiration_ms == DEFAULT_TABLE_EXPIRATION_MS
-        for d in fake_client.created_datasets
-    )
+    assert {
+        (d.labels[BIGTESTY_RUN_ID_LABEL_KEY], d.default_table_expiration_ms) for d in fake_client.created_datasets
+    } == {("abc", 6 * 60 * 60 * 1000)}
 
 
-def test_given_partitioned_and_clustered_table_when_create_ephemeral_infra_then_table_keeps_its_config(fake_client):
-    # GIVEN
-    ephemeral_datasets = build_ephemeral_datasets("my-project", "EU", "abc", 1, DATASETS_CONFIG)
-
+def test_given_partitioned_and_clustered_table_when_create_ephemeral_infra_then_table_keeps_its_config(
+    tmp_path, fake_client
+):
     # WHEN
-    create_ephemeral_infra(fake_client, "abc", ephemeral_datasets)
+    create_ephemeral_infra(fake_client, _plan(tmp_path), "abc")
 
     # THEN
-    [table] = fake_client.created_tables
-    assert (
-        f"{table.project}.{table.dataset_id}.{table.table_id}",
-        table.time_partitioning.field,
-        table.clustering_fields,
-    ) == (
-        "my-project.monitoring_abc_0.job_failure",
+    table = fake_client.created_tables[0]
+    assert (table.time_partitioning.type_, table.time_partitioning.field, table.clustering_fields) == (
+        "DAY",
         "dwhCreationDate",
-        ["featureName"],
+        ["jobName"],
     )
 
 
-def test_given_datasets_of_two_runs_when_destroy_ephemeral_infra_then_only_the_run_datasets_are_deleted(fake_client):
+def test_given_datasets_of_two_runs_when_destroy_ephemeral_infra_then_only_the_run_datasets_are_deleted(
+    tmp_path, fake_client
+):
     # GIVEN
-    create_ephemeral_infra(fake_client, "abc", build_ephemeral_datasets("my-project", "EU", "abc", 1, DATASETS_CONFIG))
-    create_ephemeral_infra(fake_client, "xyz", build_ephemeral_datasets("my-project", "EU", "xyz", 1, DATASETS_CONFIG))
+    plan = _plan(tmp_path)
+    create_ephemeral_infra(fake_client, plan, "abc")
+    create_ephemeral_infra(fake_client, plan, "xyz")
 
     # WHEN
     destroy_ephemeral_infra(fake_client, "abc")
 
     # THEN
-    assert sorted(fake_client.deleted_datasets) == ["my-project.monitoring_abc_0", "my-project.referential_abc_0"]
+    assert sorted(fake_client.deleted_datasets) == ["test-project.monitoring_abc_0", "test-project.monitoring_abc_1"]
+
+
+def test_given_old_and_recent_datasets_when_destroy_expired_datasets_then_only_old_ones_are_deleted(
+    tmp_path, fake_client
+):
+    # GIVEN
+    create_ephemeral_infra(fake_client, _plan(tmp_path), "abc")
+    old_dataset, recent_dataset = fake_client.created_datasets
+    old_dataset._properties["creationTime"] = str(int((datetime.now(UTC) - timedelta(days=1)).timestamp() * 1000))
+    recent_dataset._properties["creationTime"] = str(int(datetime.now(UTC).timestamp() * 1000))
+
+    # WHEN
+    deleted = destroy_expired_datasets(fake_client, timedelta(hours=6), dry_run=False)
+
+    # THEN
+    assert (deleted, fake_client.deleted_datasets) == (["monitoring_abc_0"], ["test-project.monitoring_abc_0"])

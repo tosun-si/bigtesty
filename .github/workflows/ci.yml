@@ -55,6 +55,11 @@ jobs:
     - name: Unit tests
       run: uv run pytest
 
+    - name: JSON Schemas are up to date
+      run: |
+        uv run bigtesty schema --output-dir schemas
+        git diff --exit-code schemas
+
   package:
     name: Build and smoke test the wheel
     runs-on: ubuntu-latest
