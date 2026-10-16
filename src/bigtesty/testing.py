@@ -124,6 +124,28 @@ class BigTestyInfra:
         self.bytes_billed += bytes_billed
         return [dict(row.items()) for row in rows]
 
+    def truncate(self, *tables: str) -> None:
+        """Deletes all the rows of the given tables (`dataset.table`), to isolate the tests sharing the infra."""
+        for table in tables:
+            self._check_configured_table(table)
+
+        if tables:
+            self.query("\n".join(f"TRUNCATE TABLE {table};" for table in tables))
+
+    def reset(self) -> None:
+        """Deletes all the rows of all the tables of the config, in one script. The DDL objects are kept."""
+        self.truncate(
+            *(f"{dataset.dataset_id}.{table.table_id}" for dataset in self.plan.datasets for table in dataset.tables)
+        )
+
+    def _check_configured_table(self, table: str) -> None:
+        dataset, table_name = _split_table(table)
+        self._check_configured_dataset(dataset)
+        tables = {t.table_id for d in self.plan.datasets if d.dataset_id == dataset for t in d.tables}
+
+        if table_name not in tables:
+            raise BigTestyError(f"The table {table} is not declared in the config")
+
     def _check_configured_dataset(self, dataset: str) -> None:
         if dataset not in self.plan.dataset_ids:
             raise BigTestyError(

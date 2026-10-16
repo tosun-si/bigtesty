@@ -259,8 +259,9 @@ class TestFailuresSummary:
         assert rows == [{"featureName": "featurePSG", "failuresCount": 1}]
 ```
 
-`infra.query` rewrites the configured datasets as in the test files. The plugin also provides a session-scoped
-`bigtesty_infra` fixture. See the [Python tests](https://tosun-si.github.io/bigtesty/running-tests/python-tests/) page
+`infra.query` rewrites the configured datasets as in the test files, `infra.reset()` empties the tables between the
+scenarios sharing an infra, and anything callable from Python (a job, a service, dbt...) can run on the infra. The
+plugin also provides a session-scoped `bigtesty_infra` fixture. See the [Python tests](https://tosun-si.github.io/bigtesty/running-tests/python-tests/) page
 and the [`05-python-tests`](examples/05-python-tests/) example.
 
 ## Run with Docker

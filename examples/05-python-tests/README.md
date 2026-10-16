@@ -8,11 +8,14 @@ bigtesty.yaml                          # the datasets and tables, no test files 
 failures_summary.py                    # the code under test, the dataset as a parameter
 test_failures_summary_pytest.py        # class-scoped fixture, and the bigtesty_infra session fixture
 test_failures_summary_unittest.py      # setUpClass / tearDownClass
+test_failures_summary_scenarios.py     # parametrized scenarios on one infra, isolated with reset()
 ```
 
 - `TestFailuresSummary`: one infra for the 2 tests of the class, with a `scope="class"` fixture.
 - `test_with_the_session_fixture`: the `bigtesty_infra` fixture of the plugin, one infra for the pytest session.
 - `FailuresSummaryTest`: the same with unittest.
+- `test_failures_summary`: 3 scenarios as the cases of a parametrized test, on one infra for the module, each one
+  starting with `infra.reset()`.
 
 From the repository root:
 
@@ -26,4 +29,4 @@ Or only the unittest tests, from this folder:
 uv run --project ../.. python -m unittest test_failures_summary_unittest
 ```
 
-The tests sharing an infra share its data: here the data is loaded once in the setup.
+The tests sharing an infra share its data: load it once in the setup, or start each scenario with `reset()`.
