@@ -1,0 +1,46 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  # The library: the minor and patch updates of the dependencies grouped in one PR.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    groups:
+      python:
+        update-types: [minor, patch]
+
+  # The uv project example: keeps its bigtesty pin on the latest release.
+  - package-ecosystem: uv
+    directory: /examples/04-uv-project
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    groups:
+      example-uv-project:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /bigtesty-doc
+    schedule:
+      interval: weekly
+    labels: [dependencies]
+    groups:
+      docs:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies]
