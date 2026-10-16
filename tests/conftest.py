@@ -21,6 +21,7 @@ class FakeRowIterator:
 @dataclass
 class FakeJob:
     row_iterator: FakeRowIterator = field(default_factory=FakeRowIterator)
+    total_bytes_billed: int | None = None
 
     def result(self) -> FakeRowIterator:
         return self.row_iterator
@@ -34,6 +35,7 @@ class FakeBigQueryClient:
     """
 
     query_handler: Callable[[str], FakeRowIterator] = lambda query: FakeRowIterator()
+    bytes_billed_per_query: int | None = None
     created_datasets: list[bigquery.Dataset] = field(default_factory=list)
     created_tables: list[bigquery.Table] = field(default_factory=list)
     deleted_datasets: list[str] = field(default_factory=list)
@@ -71,7 +73,7 @@ class FakeBigQueryClient:
         self.queries.append(query)
         self.query_job_configs.append(job_config)
         self.events.append(f"query {query}")
-        return FakeJob(self.query_handler(query))
+        return FakeJob(self.query_handler(query), self.bytes_billed_per_query)
 
 
 @pytest.fixture

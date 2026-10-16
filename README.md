@@ -112,18 +112,21 @@ bigtesty test
 ```
 
 ```text
-PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name  (4.7s)
-PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name_with_functions  (4.1s)
-PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_job_name  (3.8s)
-FAILED  monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features  (8.2s)
+PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name  (4.7s, 10.0 MiB billed)
+PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name_with_functions  (4.1s, 10.0 MiB billed)
+PASSED  monitoring/find_failures.bigtesty.yaml::find_failures_by_job_name  (3.8s, 10.0 MiB billed)
+FAILED  monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features  (8.2s, 40.0 MiB billed)
 
 ________ monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features ________
 then[0] / rows:
     expected 2 rows, got 2, diff from expected to actual:
     Value of root[0]['failuresCount'] changed from 8 to 7.
 
-3 passed, 1 failed (run zivarf)
+3 passed, 1 failed, 70.0 MiB billed (run zivarf)
 ```
+
+The bytes billed are the ones of the query jobs (DDL, `when` and `then`), BigQuery bills at least 10 MiB per
+query. The test data is loaded with load jobs, which are free.
 
 Runnable examples, from the basics to a uv project with its CI, are in the [examples](examples) folder.
 

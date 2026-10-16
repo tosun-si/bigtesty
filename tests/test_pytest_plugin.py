@@ -120,3 +120,20 @@ def test_given_project_without_bigtesty_files_when_run_then_bigquery_client_is_n
 
     # THEN
     result.assert_outcomes(passed=1)
+
+
+def test_given_query_jobs_when_run_then_bytes_billed_in_summary_and_junit_properties(project, monkeypatch):
+    # GIVEN
+    client = FakeBigQueryClient(
+        query_handler=lambda query: FakeRowIterator(rows=[{"x": 1}]), bytes_billed_per_query=1024
+    )
+    monkeypatch.setattr(BigTestySession, "client_factory", staticmethod(lambda project_id: client))
+
+    pytester = project()
+
+    # WHEN
+    result = pytester.runpytest("--junitxml=report.xml")
+
+    # THEN
+    result.stdout.fnmatch_lines(["BigTesty: 2.0 KiB billed by 2 scenario(s)"])
+    assert (pytester.path / "report.xml").read_text().count('<property name="bytes_billed" value="1024"') == 2

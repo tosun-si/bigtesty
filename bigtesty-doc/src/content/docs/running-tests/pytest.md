@@ -15,6 +15,7 @@ tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name PASS
 tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name_with_functions PASSED [ 50%]
 tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_job_name PASSED                  [ 75%]
 tests/monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features PASSED [100%]
+BigTesty: 70.0 MiB billed by 4 scenario(s)
 ```
 
 All the pytest features come for free:
@@ -24,6 +25,8 @@ pytest tests -k merge                    # select the scenarios
 pytest tests --lf                        # re-run the last failed scenarios
 pytest tests --junitxml=report.xml       # JUnit XML report for the CI
 ```
+
+In the JUnit XML report, each test case has a `bytes_billed` property with the bytes billed by its scenario.
 
 A failed scenario shows the diff of each failed assertion, like the CLI:
 
