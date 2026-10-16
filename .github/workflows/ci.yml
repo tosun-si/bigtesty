@@ -87,7 +87,8 @@ jobs:
       run: |
         uv venv /tmp/smoke
         uv pip install --python /tmp/smoke dist/*.whl
-        /tmp/smoke/bin/bigtesty version
+        /tmp/smoke/bin/bigtesty --version
         /tmp/smoke/bin/bigtesty test --help
+        for config in examples/*/bigtesty.yaml; do /tmp/smoke/bin/bigtesty validate --config "$config"; done
         uv pip install --python /tmp/smoke pytest
         /tmp/smoke/bin/pytest --help | grep -- --bigtesty-project

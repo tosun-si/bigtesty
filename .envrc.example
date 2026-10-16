@@ -8,8 +8,4 @@ fi
 export VIRTUAL_ENV="$(pwd)/.venv"
 PATH_add "$VIRTUAL_ENV/bin"
 
-export GOOGLE_PROJECT=<gcp_project_id>
-export GOOGLE_REGION=EU
-export ROOT_TEST_FOLDER="$(pwd)/examples/tests"
-export ROOT_TABLES_FOLDER="$(pwd)/examples/tests/tables"
-export TABLES_CONFIG_FILE="$(pwd)/examples/tests/tables/tables.json"
+export GOOGLE_CLOUD_PROJECT=<gcp_project_id>

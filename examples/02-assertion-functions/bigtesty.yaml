@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-config.schema.json
+
+location: EU
+tests: tests
+
+datasets:
+  - id: monitoring
+    tables:
+      # Inline schema: only the columns used by the tests.
+      - id: job_failure
+        schema:
+          - { name: featureName, type: STRING }
+          - { name: jobName, type: STRING }
+          - { name: componentType, type: STRING }
+          - { name: dwhCreationDate, type: TIMESTAMP }

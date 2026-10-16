@@ -1,45 +1,42 @@
 ---
 title: GitLab CI
-description: "Run the BigTesty tests in GitLab CI."
+description: "Run the BigTesty tests in GitLab CI, with uv."
 ---
 
-`Gitlab CI` is a popular and the built-in CI tool with `Gilab`
+The pipeline of the [`04-uv-project`](https://github.com/tosun-si/bigtesty/blob/main/examples/04-uv-project) example: BigTesty is a dev dependency of the project, locked in
+`uv.lock`, and the tests run with pytest.
 
-This sections shows how to use `BigTesty` with `Gitlab CI` and how to launch tests with.
+**The service account needs the `roles/bigquery.user` role on the test project.**
 
-**The Service Account (default or user-specified) needs the `roles/bigquery.user` role on the test project.**
-
-An example of `yaml` file:
-
-```yaml
+```yaml title=".gitlab-ci.yml"
 variables:
-  GOOGLE_PROJECT: $PROJECT_ID
+  GOOGLE_CLOUD_PROJECT: "<gcp_project_id>"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+  UV_LINK_MODE: "copy"
 
 stages:
   - tests
 
 tests:
   stage: tests
-  image:
-    name: "groupbees/bigtesty"
-    entrypoint: [ "" ]
-  when: manual
+  image: "ghcr.io/astral-sh/uv:python3.13-bookworm-slim"
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache
   script:
-    - |
-      bigtesty test \
-        --config $CI_PROJECT_DIR/examples/bigtesty.yaml \
-        --project $GOOGLE_PROJECT
+    - uv sync --frozen
+    - uv run pytest
+  after_script:
+    - uv cache prune --ci
 ```
 
-In this example, the authentication is managed internally. If your `Gitlab` installation or runners are on `GCP`,
-you can use `Workload Identity Federation` to prevent the use of a Service Account token key.
-
-Some explanations on the `Gitlab CI` steps:
-- The `GCP` project is passed as environment variable
-- The CI has only one stage called `tests`, this stage is based on job with the same name `tests`
-- The `tests` job is based on the `BigTesty` `Docker` image via the `image` parameter
-- We need to override the `entrypoint` of the container without an action (empty string)
-- In this example, the job is manual: `when: manual`
-- With the `script` parameter, we can launch the tests, via the CLI and the dedicated command line
-- We need to pass the `GCP` project and the config file as CLI options
-- For the config file, the `$CI_PROJECT_DIR` predefined variable allows to access to current repo path
+- The job runs in the uv image, with Python 3.13.
+- The uv cache is kept in the project directory, the only one GitLab can cache, and keyed on `uv.lock`.
+  `uv cache prune --ci` removes what is cheap to rebuild before it is saved.
+- `uv sync --frozen` installs the versions locked in `uv.lock`, `uv run pytest` runs one test per scenario.
+- The authentication uses the Application Default Credentials of the runner: its service account when it runs on
+  GCP, or [Workload Identity Federation with GitLab](https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines#gitlab-saas)
+  otherwise, without a service account key.

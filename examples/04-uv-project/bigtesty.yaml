@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-config.schema.json
+
+# The GCP project is passed with --bigtesty-project / --project or the GOOGLE_CLOUD_PROJECT env var.
+location: EU
+tests: tests
+
+datasets:
+  - id: monitoring
+    tables:
+      - id: job_failure
+        schema:
+          - { name: featureName, type: STRING }
+          - { name: jobName, type: STRING }
+          - { name: dwhCreationDate, type: TIMESTAMP }

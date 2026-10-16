@@ -10,13 +10,13 @@ The entrypoint of the image is the `bigtesty` CLI, and its working and home dire
 ```bash
 docker run -it \
    -e GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
-   -v $(pwd)/examples:/usr/local/src/app/project \
+   -v $(pwd)/examples/01-queries:/usr/local/src/app/project \
    -v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud \
    groupbees/bigtesty test --config project/bigtesty.yaml
 ```
 
 We need to mount as volumes:
-- The BigTesty project, containing the `bigtesty.yaml` config file: `-v $(pwd)/examples:/usr/local/src/app/project`
+- The BigTesty project, containing the `bigtesty.yaml` config file: `-v $(pwd)/examples/01-queries:/usr/local/src/app/project`
 - The local `gcloud` configuration: `-v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`
 
 When the authentication is done with Application Default Credentials (`gcloud auth application-default login`),

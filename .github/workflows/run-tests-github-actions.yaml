@@ -1,7 +1,7 @@
-name: Run BigTesty Test
+name: Run the examples
 
 env:
-  GOOGLE_PROJECT: gb-poc-373711
+  GOOGLE_CLOUD_PROJECT: gb-poc-373711
 
   WORKLOAD_IDENTITY_PROVIDER: 'projects/975119474255/locations/global/workloadIdentityPools/gb-github-actions-ci-cd-pool/providers/gb-github-actions-ci-cd-provider'
   SA_CI_CD_EMAIL: 'sa-bigtesty@gb-poc-373711.iam.gserviceaccount.com'
@@ -10,20 +10,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-template:
-
+  run-example:
+    name: Run ${{ matrix.example }}
     runs-on: ubuntu-latest
 
     permissions:
       contents: 'read'
       id-token: 'write'
 
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [01-queries, 02-assertion-functions, 03-merge-with-ddl]
+
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@v4'
 
       - name: 'Google auth'
-        id: 'auth'
         uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
@@ -34,11 +38,9 @@ jobs:
         with:
           enable-cache: true
 
+      # BigTesty from the sources of the repo.
       - name: 'Set up BigTesty'
         run: uv sync --frozen --no-dev
 
-      - name: 'Run BigTesty Tests'
-        run: |
-          uv run bigtesty test \
-            --config $GITHUB_WORKSPACE/examples/bigtesty.yaml \
-            --project $GOOGLE_PROJECT
+      - name: 'Run the example'
+        run: uv run bigtesty test --config examples/${{ matrix.example }}/bigtesty.yaml

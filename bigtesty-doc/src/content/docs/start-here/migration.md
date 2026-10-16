@@ -32,7 +32,7 @@ bigtesty test \
   --tables-config-file $(pwd)/examples/tests/tables/tables.json
 
 # 1.0
-bigtesty test --config examples/bigtesty.yaml --project $PROJECT_ID
+bigtesty test --config bigtesty.yaml --project $PROJECT_ID
 ```
 
 | 0.1.x option / env var                                     | 1.0                                                          |

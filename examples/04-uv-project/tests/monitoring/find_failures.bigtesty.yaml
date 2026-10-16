@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
+
+description: Find the job failures
+
+scenarios:
+  - name: find_failures_by_job_name
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: myFeature, jobName: jobPSG, dwhCreationDate: "2022-05-06 17:38:10" }
+          - { featureName: myFeature, jobName: otherJob, dwhCreationDate: "2022-05-07 08:00:00" }
+    then:
+      - query: SELECT featureName, jobName FROM `monitoring.job_failure` WHERE jobName = 'jobPSG'
+        expected:
+          - { featureName: myFeature, jobName: jobPSG }
+
+  - name: count_failures_by_feature
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: featurePSG, jobName: job1, dwhCreationDate: "2022-05-06 17:38:10" }
+          - { featureName: featurePSG, jobName: job2, dwhCreationDate: "2022-05-07 08:00:00" }
+    then:
+      - query: SELECT featureName, COUNT(*) AS failuresCount FROM `monitoring.job_failure` GROUP BY featureName
+        expected:
+          - { featureName: featurePSG, failuresCount: 2 }

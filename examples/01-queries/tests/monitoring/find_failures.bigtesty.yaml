@@ -4,29 +4,13 @@ description: Find the job failures
 
 scenarios:
   - name: find_failures_by_feature_name
-    description: Fixtures and expected rows in separate files
+    description: Test data and expected rows in separate files
     given:
       - table: monitoring.job_failure
         rows_file: given/input_failures_feature_name.json
     then:
       - query_file: queries/find_failures_by_feature_name.sql
         expected_file: then/expected_failures_feature_name.json
-
-  - name: find_failures_by_feature_name_with_functions
-    description: Custom Python assertion functions, in addition to a row count
-    given:
-      - table: monitoring.job_failure
-        rows_file: given/input_failures_feature_name.json
-    then:
-      - query_file: queries/find_failures_by_feature_name.sql
-        row_count: 1
-        functions:
-          - module: assertion_functions/failures_assertions.py
-            function: check_failures_have_creation_date
-          - module: assertion_functions/failures_assertions.py
-            function: check_failures_concern_feature_psg
-          - module: assertion_functions/failures_assertions.py
-            function: check_failures_are_recent
 
   - name: find_failures_by_job_name
     description: Inline rows, only the columns of the expected rows are compared

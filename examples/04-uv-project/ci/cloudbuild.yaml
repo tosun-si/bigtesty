@@ -1,0 +1,9 @@
+# gcloud builds submit --config ci/cloudbuild.yaml .
+steps:
+  - name: 'ghcr.io/astral-sh/uv:python3.13-bookworm-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        uv sync --frozen
+        uv run pytest --bigtesty-project $PROJECT_ID
