@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "bigtesty"
-version = "0.3.0rc1"
+version = "1.0.0rc1"
 description = "BigTesty is an integration testing framework for BigQuery"
 readme = "README.md"
 license = "MIT"
@@ -12,6 +12,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "Mazlum TOSUN", email = "mazlum.tosun@gmail.com" }]
 requires-python = ">=3.11"
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
