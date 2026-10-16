@@ -1,7 +1,16 @@
 ![bigtesty_logo_with_slogan.png](https://raw.githubusercontent.com/tosun-si/bigtesty/main/bigtesty-doc/src/assets/bigtesty_logo_with_slogan.png)
 
+[![PyPI](https://img.shields.io/pypi/v/bigtesty?label=PyPI)](https://pypi.org/project/bigtesty/)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://pypi.org/project/bigtesty/)
+[![Docker](https://img.shields.io/docker/v/groupbees/bigtesty?sort=semver&label=Docker)](https://hub.docker.com/r/groupbees/bigtesty)
+[![CI](https://github.com/tosun-si/bigtesty/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tosun-si/bigtesty/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/badge/docs-tosun--si.github.io%2Fbigtesty-blue)](https://tosun-si.github.io/bigtesty/)
+[![License](https://img.shields.io/github/license/tosun-si/bigtesty)](https://github.com/tosun-si/bigtesty/blob/main/LICENSE)
+
 BigTesty is an integration testing framework for BigQuery, running the tests on a real and short-lived
 infrastructure.
+
+**Documentation: [tosun-si.github.io/bigtesty](https://tosun-si.github.io/bigtesty/)**
 
 - **The real BigQuery engine**, no emulator: the SQL behaves exactly as in production.
 - **Given / When / Then** test files in YAML or JSON: load test data, run any SQL (queries, DML, `MERGE`,
