@@ -192,6 +192,8 @@ bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
 bigtesty test --update            # rewrite the expected files that don't match from the actual rows
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
+bigtesty infra create -o json      # create the infra for the tests of another language
+bigtesty infra destroy --run-id x  # and delete it
 bigtesty schema -o schemas         # write the JSON Schemas
 ```
 
@@ -263,6 +265,10 @@ class TestFailuresSummary:
 scenarios sharing an infra, and anything callable from Python (a job, a service, dbt...) can run on the infra. The
 plugin also provides a session-scoped `bigtesty_infra` fixture. See the [Python tests](https://tosun-si.github.io/bigtesty/running-tests/python-tests/) page
 and the [`05-python-tests`](examples/05-python-tests/) example.
+
+The tests of the other languages (Java / JUnit 5, Go...) get the same infra with `bigtesty infra create --output json`
+in their setup and `bigtesty infra destroy` in their teardown, with the CLI or the Docker image, Testcontainers
+included: see the [Other languages](https://tosun-si.github.io/bigtesty/running-tests/other-languages/) page.
 
 ## Run with Docker
 

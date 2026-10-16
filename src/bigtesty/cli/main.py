@@ -13,12 +13,13 @@ from google.cloud import bigquery
 
 from bigtesty import __version__
 from bigtesty.exceptions import BigTestyError
-from bigtesty.infra.ephemeral_infra import destroy_expired_datasets, generate_run_id
+from bigtesty.infra.ephemeral_infra import destroy_ephemeral_infra, destroy_expired_datasets, generate_run_id
 from bigtesty.plan import RunPlan
 from bigtesty.report import format_run_report
 from bigtesty.runner import run_tests
 from bigtesty.spec.loader import build_run_plan, find_config_file, load_model, load_spec_files
 from bigtesty.spec.models import ProjectConfig, SpecFile
+from bigtesty.testing import BigTestyInfra, load_infra_plan
 
 app = typer.Typer(help="BigTesty is an integration testing framework for BigQuery.", no_args_is_help=True)
 
@@ -123,6 +124,78 @@ def gc_command(
     for dataset_id in deleted:
         typer.echo(dataset_id)
     typer.echo(f"{len(deleted)} dataset(s) {'to delete' if dry_run else 'deleted'}")
+
+
+infra_app = typer.Typer(
+    help="Create and destroy the ephemeral infra of a config, for the tests of any language (Java, Go...).",
+    no_args_is_help=True,
+)
+app.add_typer(infra_app, name="infra")
+
+OutputOption = Annotated[
+    Literal["text", "json"],
+    typer.Option("--output", "-o", help="text, or json to be read by a program (the logs go to stderr)."),
+]
+
+
+@infra_app.command("create", help="Create the datasets, tables and DDL objects of the config, and show their IDs.")
+def infra_create_command(
+    config: ConfigOption = None,
+    project: ProjectOption = None,
+    location: LocationOption = None,
+    output: OutputOption = "text",
+    verbose: VerboseOption = False,
+) -> None:
+    _configure_logging(verbose)
+
+    with _handle_errors():
+        plan = load_infra_plan(config, project=project, location=location)
+        infra = BigTestyInfra(plan, bigquery.Client(project=plan.project_id)).start()
+
+    datasets = {dataset_id: infra.dataset_id(dataset_id) for dataset_id in plan.dataset_ids}
+    tables = {
+        f"{dataset.dataset_id}.{table.table_id}": infra.table_id(f"{dataset.dataset_id}.{table.table_id}")
+        for dataset in plan.datasets
+        for table in dataset.tables
+    }
+
+    if output == "json":
+        typer.echo(
+            json.dumps(
+                {
+                    "run_id": infra.run_id,
+                    "project": plan.project_id,
+                    "datasets": datasets,
+                    "tables": tables,
+                    "table_expiration_hours": plan.table_expiration_hours,
+                }
+            )
+        )
+    else:
+        typer.echo(f"Run ID: {infra.run_id}")
+        typer.echo("\n".join(f"{dataset_id} -> {full_id}" for dataset_id, full_id in datasets.items()))
+        typer.echo(f"Destroy it with: bigtesty infra destroy --run-id {infra.run_id} --project {plan.project_id}")
+
+
+@infra_app.command("destroy", help="Delete the datasets of a run created by bigtesty infra create.")
+def infra_destroy_command(
+    run_id: Annotated[str, typer.Option("--run-id", help="Run ID shown by bigtesty infra create.")],
+    project: ProjectOption = None,
+    config: ConfigOption = None,
+    output: OutputOption = "text",
+    verbose: VerboseOption = False,
+) -> None:
+    _configure_logging(verbose)
+
+    with _handle_errors():
+        # Without --project, the project of the config.
+        project_id = project or load_infra_plan(config).project_id
+        deleted = destroy_ephemeral_infra(bigquery.Client(project=project_id), run_id)
+
+    if output == "json":
+        typer.echo(json.dumps({"run_id": run_id, "deleted_datasets": deleted}))
+    else:
+        typer.echo(f"{deleted} dataset(s) deleted")
 
 
 @app.command("schema", help="Write the JSON Schemas of the config and test files, for IDE validation.")
