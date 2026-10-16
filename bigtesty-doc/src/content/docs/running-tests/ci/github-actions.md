@@ -43,19 +43,17 @@ jobs:
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ env.SA_CI_CD_EMAIL }}'
 
-      - name: 'Install Python'
-        uses: actions/setup-python@v5
+      - name: 'Set up uv'
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          enable-cache: true
 
       - name: 'Set up BigTesty'
-        run: pip install bigtesty
-        shell: bash
+        run: uv sync --frozen
 
       - name: 'Run BigTesty Tests'
         run: |
-          bigtesty test \
+          uv run bigtesty test \
             --config $GITHUB_WORKSPACE/examples/bigtesty.yaml \
             --project $GOOGLE_PROJECT
 ```
@@ -69,6 +67,6 @@ We share some resources, if you want more details about this topic:
 
 Some explanations on the `GitHub Actions` steps:
 - The first steps allows to check out the repo and to be authenticated on `GCP`
-- The `Install Python` step installs and set up `Python` and `pip` the packager manager for `Python`, we use a cache for `pip` to save time for the next executions
-- The `Set up BigTesty` step installs the `BigTesty` `Python` `package` from `PyPi`. We use a `requirements.txt` file to use the cache with `GitHub Actions`, as long as the file does not change, `GHA` will use the cache
+- The `Set up uv` step installs [uv](https://docs.astral.sh/uv/), with a cache of the packages keyed on `uv.lock`
+- The `Set up BigTesty` step installs the project dependencies locked in `uv.lock`, `BigTesty` being a dev dependency of the project (`uv add --dev bigtesty`). uv installs the Python version of the project if it is not on the runner
 - The `Run BigTesty Tests` step launches the tests with the CLI and the dedicated command line, the GCP project and the config file need to be passed. For the config file, the `$GITHUB_WORKSPACE` predefined variable allows to access to current repo path

@@ -20,7 +20,7 @@ infrastructure.
 ## Quick start
 
 ```bash
-pip install bigtesty
+uv add --dev bigtesty
 gcloud auth application-default login
 ```
 
