@@ -4,55 +4,22 @@ sidebar_position: 2
 
 # Docker Image
 
-`BigTesty` is published as `Docker` image to `Docker` hub:
+`BigTesty` is published as a `Docker` image to [Docker Hub](https://hub.docker.com/r/groupbees/bigtesty).
 
-https://hub.docker.com/r/groupbees/bigtesty/
-
-# Pull the image locally
-
-Pull the `BigTesty` `Docker` locally:
+The entrypoint of the image is the `bigtesty` CLI, and its working and home directory is `/usr/local/src/app`.
 
 ```bash
-docker pull groupbees/bigtesty
-```
-
-# Authentication on GCP
-
-**You need to be authenticated with Google Cloud Platform before running command.**
-
-We recommend to be authenticated with [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials)
-
-```bash
-gcloud auth application-default login
-```
-
-**The current GCP user needs to have the expected privileges to perform the actions in BigQuery and in the GCS bucket specified as backend URL**
-
-# Run the tests with Docker
-
-```bash
-export PROJECT_ID={{project_id}}
-export LOCATION={{region}}
-export ROOT_TEST_FOLDER=/usr/local/src/app/tests
-export ROOT_TABLES_FOLDER=/usr/local/src/app/tests/tables
-export TABLES_CONFIG_FILE_PATH=/usr/local/src/app/tests/tables/tables.json
-
 docker run -it \
-   -e GOOGLE_PROJECT=$PROJECT_ID \
-   -e GOOGLE_REGION=$LOCATION \
-   -e TABLES_CONFIG_FILE="$TABLES_CONFIG_FILE_PATH" \
-   -e ROOT_TEST_FOLDER=$ROOT_TEST_FOLDER \
-   -e ROOT_TABLES_FOLDER="$ROOT_TABLES_FOLDER" \
-   -v $(pwd)/examples/tests:/usr/local/src/app/tests \
-   -v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables \
+   -e GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
+   -v $(pwd)/examples:/usr/local/src/app/project \
    -v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud \
-   groupbees/bigtesty test
+   groupbees/bigtesty test --config project/bigtesty.yaml
 ```
 
-With `Docker`, we need to mount as volume all the needed folders:
-- The root testing folder: `v $(pwd)/examples/tests:/usr/local/src/app/tests`
-- The root tables folder: `v $(pwd)/examples/tests/tables:/usr/local/src/app/tests/tables`
+We need to mount as volumes:
+- The BigTesty project, containing the `bigtesty.yaml` config file: `-v $(pwd)/examples:/usr/local/src/app/project`
+- The local `gcloud` configuration: `-v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`
 
-To prevent the use of a long-lived service account token key for local executions with `Docker`, we need to share the local
-`gcloud` configuration with the container and mount it as volume:
-- The local `gcloud` configuration: `$HOME/.config/gcloud:/usr/local/src/app/.config/gcloud`
+When the authentication is done with Application Default Credentials (`gcloud auth application-default login`),
+a short-lived credential is generated in the local `gcloud` configuration. Mounting it in the container
+authenticates `BigTesty` with your current user, without a long-lived service account key.

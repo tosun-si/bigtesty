@@ -2,45 +2,35 @@
 sidebar_position: 1
 ---
 
-# PyPi Package
+# PyPI Package
 
-`BigTesty` is published as `Python` package to `PyPi`:
+`BigTesty` is published as a `Python` package (Python 3.11+) to [PyPI](https://pypi.org/project/bigtesty/).
 
-https://pypi.org/project/bigtesty/
-
-# Installation of the project
-
-The package can be installed with `pip`, we recommend to use a virtual env to isolate the packages for your project:
+## Installation
 
 ```bash
 pip install bigtesty
+# or, as a dev dependency of a uv project
+uv add --dev bigtesty
 ```
 
-# Authentication on GCP
+## Authentication on GCP
 
-**You need to be authenticated with Google Cloud Platform before running command.**
-
-We recommend to be authenticated with [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials)
+BigTesty uses [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):
 
 ```bash
 gcloud auth application-default login
 ```
 
-**The current GCP user needs to have the expected privileges to perform the actions in BigQuery and in the GCS bucket specified as backend URL**
+The GCP user or service account needs the `roles/bigquery.user` role on the test project: it allows to create
+datasets and to run jobs, and the creator of a dataset is the owner of the dataset.
 
-# Execution of the tests
+## Execution of the tests
 
-After installed the `BigTesty` package, we can launch the tests with the CLI:
+From the directory containing the `bigtesty.yaml` config file (or one of its sub directories):
 
 ```bash
-bigtesty test \
-  --project $PROJECT_ID \
-  --region $LOCATION \
-  --root-test-folder $(pwd)/examples/tests \
-  --root-tables-folder $(pwd)/examples/tests/tables \
-  --tables-config-file $(pwd)/examples/tests/tables/tables.json
+bigtesty test --project $PROJECT_ID
 ```
 
-The `BigTesty test` command with options, launches the test.
-
-To have more details on the command and the options, check the section dedicated to the [CLI](../cli.md)
+To have more details on the commands and the options, check the section dedicated to the [CLI](../cli.md).

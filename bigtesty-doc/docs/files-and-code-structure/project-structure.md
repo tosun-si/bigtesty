@@ -2,50 +2,61 @@
 sidebar_position: 1
 ---
 
-# Testing code structure
+# Project structure
 
-With `BigTesty`, we have 3 parameters that concern testing files, to pass in the CLI to launch the tests:
-- `root-test-folder`: the root folder containing all the testing definition files in `Json` format. The definitions files need to have the following naming convention: `definition_*.json`
-- `root-tables-folder`: the folder containing all the files that concern the creation of `BigQuery` tables. For example this folder can contain the `BigQuery` tables schemas.
-- `tables-config-file`: the config file that contains the list of datasets and tables to create in a `Json` file.
+A BigTesty project contains:
+- a `bigtesty.yaml` [config file](project-config.md), declaring the datasets and tables to create for the tests,
+- [test files](test-files.md) named `*.bigtesty.yaml`, `*.bigtesty.yml` or `*.bigtesty.json`, in the `tests`
+  directory of the config, and the files they reference (rows, SQL, expected rows, Python assertion functions).
 
-Example of code structure, proposed in the `examples/tests` folder in the repository:
+All the files can be written in YAML or JSON. The paths are relative to the file that declares them.
 
-![bigtesty_examples_code_structure.png](/img/bigtesty_examples_code_structure.png)
+Example of the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples) folder of the BigTesty repo:
 
-## Root test folder
+```text
+bigtesty.yaml
+schema/monitoring/job_failure.json
+ddl/monitoring/v_failures_count_by_feature.sql
+tests/monitoring/
+├── find_failures.bigtesty.yaml
+├── merge_failures_summary.bigtesty.yaml
+├── assertion_functions/failures_assertions.py
+├── given/input_failures_feature_name.json
+├── queries/find_failures_by_feature_name.sql
+├── then/expected_failures_feature_name.json
+└── when/merge_failures_summary.sql
+```
 
-**The files need to be added in the `root-test-folder`**
+## Isolation of the scenarios
 
-This folder contains all the testing files and given as parameter to the CLI.
+For each run, BigTesty creates one dataset per configured dataset and per scenario, e.g. `monitoring_hlnyks_0`
+for the dataset `monitoring`, the run `hlnyks` and the first scenario. The datasets are labelled with
+`bigtesty_run_id`. Each scenario works on its own data: the scenarios are executed in parallel, and several
+developers or CI pipelines can run the tests at the same time.
 
-The definitions files need to have the following naming convention: `definition_*.json`
+## SQL rewrite
 
-For more details on the testing definition files, feel free to check the [link](testing-definition-files.md)
+The SQL of the tests is the production SQL: the references to the configured datasets in the DDL files, the `when`
+and the `then` blocks are rewritten to the isolated datasets of the scenario, the formatting of the SQL is kept:
 
-In this example, the root test folder is called `tests` and contains a folder called `monitoring` that represents the current use case
+- `monitoring.job_failure`, `` `monitoring.job_failure` ``, `` `monitoring`.`job_failure` ``
+- `my-project.monitoring.job_failure`, when `my-project` is the test project or listed in the `project_aliases` of
+  the config (e.g. the production project hardcoded in the SQL).
 
-The `root-test-folder` CLI option is equals to `$(pwd)/examples/tests` and need to be an absolute path, that's why we use
-`$(pwd)` for an execution done from the root of the `BigTesty` project
+The comments, string literals and references to other datasets or projects are not touched. Scripts,
+`BEGIN...END` blocks and procedure bodies are supported.
 
-At the root of the `monitoring` folder, we have the testing definition files:
-- `definition_spec_failure_by_feature_name_functions_assertions.json`
-- `definition_spec_failure_by_feature_name_no_error.json`
-- `definition_spec_failure_by_job_name_no_error.json`
+:::caution
+Don't alias a table with the name of a configured dataset (`FROM x AS monitoring`): `monitoring.column` would be
+rewritten as a table reference.
+:::
 
-We also have 3 sub folders in the `monitoring` folder:
-- `given`
-- `when`
-- `then`
+## Cleanup
 
-## Root tables folder
+The datasets are destroyed at the end of the run, depending on the `cleanup` mode of the config:
+- `always` (default),
+- `on_success`: the datasets are kept when a scenario fails, to analyse the result in BigQuery,
+- `never`.
 
-In this example, the root tables folder is called `tables` and placed in the `tests` folder: `root-tables-folder=$(pwd)/examples/tests/tables`
-
-This folder contains all the elements to create the `BigQuery` tables like the `Json` schema files
-
-## Tables config file
-
-In this example, the tables configuration is placed in the following path: `tables-config-file=$(pwd)/examples/tests/tables/tables.json`
-
-To have more details on the tables configuration, check this [link](tables-config-file.md)
+As a safety net, the tables of the datasets expire after `table_expiration_hours` (6 by default), and
+`bigtesty gc` deletes the datasets left by killed or kept runs.
