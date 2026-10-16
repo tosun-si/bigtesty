@@ -13,10 +13,10 @@ jobs:
       id-token: write   # PyPI Trusted Publishing (OIDC), no API token
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@v7
 
     - name: Build
       run: uv build
@@ -32,7 +32,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Release intro = body of the annotated tag message
       run: |
@@ -41,7 +41,7 @@ jobs:
         git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents:body)' > release-intro.md
 
     - name: Create release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         body_path: release-intro.md
         generate_release_notes: true
