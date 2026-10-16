@@ -189,6 +189,36 @@ bigtesty schema -o schemas         # write the JSON Schemas
 
 The exit code is `0` when all the scenarios pass, `1` when a scenario fails and `2` for an invalid config.
 
+## Run with pytest
+
+BigTesty is also a pytest plugin, installed with the package: pytest collects the `*.bigtesty.yaml` / `.json` files,
+one test per scenario. The pytest features come for free: `-k`, `--lf`, JUnit XML reports for the CI, IDE
+integration...
+
+```bash
+pytest tests --bigtesty-project my-project
+pytest tests -k merge --junitxml=report.xml
+```
+
+```text
+tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name PASSED              [ 25%]
+tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_feature_name_with_functions PASSED [ 50%]
+tests/monitoring/find_failures.bigtesty.yaml::find_failures_by_job_name PASSED                  [ 75%]
+tests/monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features PASSED [100%]
+```
+
+The ephemeral infra is created once for the selected scenarios, and the scenarios run in parallel on the first
+BigTesty test executed: this test shows the duration of the whole run. pytest-xdist is not needed.
+
+| Option                 | Env var                                    | Description                                              |
+|------------------------|--------------------------------------------|----------------------------------------------------------|
+| `--bigtesty-config`    | `BIGTESTY_CONFIG`                          | Config file, `bigtesty.yaml` found from each test file directory by default. |
+| `--bigtesty-project`   | `BIGTESTY_PROJECT`, `GOOGLE_CLOUD_PROJECT` | GCP project, overrides the config.                       |
+| `--bigtesty-location`  | `BIGTESTY_LOCATION`                        | Default location of the datasets, overrides the config.  |
+| `--bigtesty-cleanup`   |                                            | `always`, `on_success` or `never`, overrides the config. |
+
+The plugin does nothing in a project without BigTesty test files.
+
 ## Run with Docker
 
 ```bash

@@ -6,6 +6,8 @@ import pytest
 from google.cloud import bigquery
 from google.cloud.bigquery import SchemaField
 
+pytest_plugins = ["pytester"]
+
 
 @dataclass
 class FakeRowIterator:
