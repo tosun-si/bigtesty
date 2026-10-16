@@ -19,7 +19,7 @@ infrastructure.
   Several developers and CI pipelines can run the tests at the same time.
 - **Production SQL unchanged**: the references to your datasets are rewritten to the isolated datasets.
 
-![bigtesty_schema.png](https://raw.githubusercontent.com/tosun-si/bigtesty/main/bigtesty-doc/src/assets/bigtesty_schema.png)
+![BigTesty architecture](https://raw.githubusercontent.com/tosun-si/bigtesty/main/bigtesty-doc/src/assets/bigtesty_architecture.png)
 
 ## Installation
 
