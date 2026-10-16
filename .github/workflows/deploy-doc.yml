@@ -1,48 +1,63 @@
-name: Deploy doc to GitHub Pages
+name: Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths: ['bigtesty-doc/**', '.github/workflows/deploy-doc.yml']
+  pull_request:
+    paths: ['bigtesty-doc/**', '.github/workflows/deploy-doc.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 defaults:
   run:
     working-directory: bigtesty-doc
 
 jobs:
-  deploy-github-pages:
-    name: Deploy Docusaurus doc GitHub Pages
+  build:
+    name: Build the Starlight documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: bigtesty-doc/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fails on a broken internal link (starlight-links-validator).
+      - name: Build website
+        run: npm run build
+
+      - name: Upload Build Artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: bigtesty-doc/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    needs: build
     runs-on: ubuntu-latest
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
+      pages: write
+      id-token: write
 
-    # Deploy to the github-pages environment
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: yarn
-          cache-dependency-path: '**/yarn.lock'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-      - name: Build website
-        run: yarn build
-
-      - name: Upload Build Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: bigtesty-doc/build
-
       - name: Deploy to GitHub Pages
-        if: github.ref_name == github.event.repository.default_branch
+        id: deployment
         uses: actions/deploy-pages@v4

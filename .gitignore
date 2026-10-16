@@ -27,7 +27,6 @@ __pycache__
 dist/
 
 # Generated files
-.docusaurus
 .cache-loader
 
 npm-debug.log*

@@ -25,6 +25,18 @@ uv run mypy src
 uv run pytest
 ```
 
+## Documentation
+
+The documentation is a [Starlight](https://starlight.astro.build/) site in `bigtesty-doc`, deployed to GitHub Pages
+from `main`. The build fails on a broken internal link.
+
+```bash
+cd bigtesty-doc
+npm ci
+npm run dev     # http://localhost:4321/bigtesty/
+npm run build
+```
+
 ## Docker build
 
 ```bash
