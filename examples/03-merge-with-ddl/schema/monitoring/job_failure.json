@@ -1,0 +1,62 @@
+[
+    {
+        "name": "featureName",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Feature name concerned by error"
+    },
+    {
+        "name": "jobName",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Job name concerned by error"
+    },
+    {
+        "name": "pipelineStep",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Pipeline step concerned by error"
+    },
+    {
+        "name": "inputElement",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Input element when error occurred"
+    },
+    {
+        "name": "exceptionType",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Exception type of error"
+    },
+    {
+        "name": "stackTrace",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Stack trace of error"
+    },
+    {
+        "name": "componentType",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "GCP Component type (Dataflow, Composer....)"
+    },
+    {
+        "name": "dwhCreationDate",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE",
+        "description": "Creation date of error"
+    },
+    {
+        "name": "dagOperator",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Current operator in the DAG concerned by the error (Airflow)"
+    },
+    {
+        "name": "additionalInfo",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Additional information for the error"
+    }
+]

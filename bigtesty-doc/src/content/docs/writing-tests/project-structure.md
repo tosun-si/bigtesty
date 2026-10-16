@@ -10,7 +10,7 @@ A BigTesty project contains:
 
 All the files can be written in YAML or JSON. The paths are relative to the file that declares them.
 
-Example of the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples) folder of the BigTesty repo:
+For example (the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples) folder of the BigTesty repo has runnable projects):
 
 ```text
 bigtesty.yaml

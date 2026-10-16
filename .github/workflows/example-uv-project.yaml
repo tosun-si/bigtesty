@@ -1,0 +1,46 @@
+# Workflow of examples/04-uv-project, a project testing its SQL with BigTesty from PyPI.
+# In your project, put it in .github/workflows/ and remove the working-directory lines.
+name: Run the uv project example
+
+env:
+  GOOGLE_CLOUD_PROJECT: gb-poc-373711
+
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/975119474255/locations/global/workloadIdentityPools/gb-github-actions-ci-cd-pool/providers/gb-github-actions-ci-cd-provider'
+  SA_CI_CD_EMAIL: 'sa-bigtesty@gb-poc-373711.iam.gserviceaccount.com'
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: examples/04-uv-project
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Google auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ env.SA_CI_CD_EMAIL }}'
+
+      - name: 'Set up uv'
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          working-directory: examples/04-uv-project
+
+      - name: 'Install the dependencies locked in uv.lock'
+        run: uv sync --frozen
+
+      - name: 'Run the BigTesty tests with pytest'
+        run: uv run pytest

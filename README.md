@@ -125,7 +125,7 @@ then[0] / rows:
 3 passed, 1 failed (run zivarf)
 ```
 
-All the files used in this documentation are in the [examples](examples) folder.
+Runnable examples, from the basics to a uv project with its CI, are in the [examples](examples) folder.
 
 ## Test files
 
@@ -234,7 +234,7 @@ The plugin does nothing in a project without BigTesty test files.
 ```bash
 docker run -it \
    -e GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
-   -v $(pwd)/examples:/usr/local/src/app/project \
+   -v $(pwd)/examples/01-queries:/usr/local/src/app/project \
    -v $HOME/.config/gcloud:/usr/local/src/app/.config/gcloud \
    groupbees/bigtesty test --config project/bigtesty.yaml
 ```
@@ -244,9 +244,9 @@ without a long-lived service account key.
 
 ## Run in CI
 
-Examples for [GitHub Actions](.github/workflows/run-tests-github-actions.yaml),
-[Cloud Build](examples/ci/cloud_build/run-tests-cloud-build.yaml) and
-[GitLab CI](examples/ci/gitlab_ci/.gitlab-ci.yml).
+The [`04-uv-project`](examples/04-uv-project/) example runs the tests with uv and pytest in
+[GitHub Actions](examples/04-uv-project/ci/github-actions.yaml), [GitLab CI](examples/04-uv-project/ci/gitlab-ci.yml)
+and [Cloud Build](examples/04-uv-project/ci/cloudbuild.yaml).
 
 ## Migrating from 0.x
 

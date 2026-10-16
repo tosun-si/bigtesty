@@ -1,19 +1,16 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-config.schema.json
 
-# The GCP project can also be passed with --project or the GOOGLE_CLOUD_PROJECT env var.
 location: EU
 tests: tests
 
 datasets:
   - id: monitoring
-    description: Monitoring dataset
     tables:
       - id: job_failure
         schema_file: schema/monitoring/job_failure.json
         partitioning:
           type: DAY
           field: dwhCreationDate
-        clustering: [featureName, jobName, componentType]
 
       - id: job_failure_summary
         schema:
@@ -24,6 +21,3 @@ datasets:
     # Views, functions, procedures... created in each isolated dataset.
     ddl_files:
       - ddl/monitoring/*.sql
-
-cleanup: always
-max_bytes_billed: 1000000000

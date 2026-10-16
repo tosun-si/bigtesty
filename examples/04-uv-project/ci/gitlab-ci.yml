@@ -1,0 +1,23 @@
+# .gitlab-ci.yml at the root of the project.
+variables:
+  GOOGLE_CLOUD_PROJECT: "<gcp_project_id>"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+  UV_LINK_MODE: "copy"
+
+stages:
+  - tests
+
+tests:
+  stage: tests
+  image: "ghcr.io/astral-sh/uv:python3.13-bookworm-slim"
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache
+  script:
+    - uv sync --frozen
+    - uv run pytest
+  after_script:
+    - uv cache prune --ci

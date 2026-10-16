@@ -48,5 +48,4 @@ Then run the tests:
 bigtesty test --project $PROJECT_ID
 ```
 
-All the files used in this documentation are in the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples)
-folder of the BigTesty repo.
+Runnable examples, from the basics to a uv project with its CI, are in the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples) folder.

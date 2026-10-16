@@ -1,8 +1,0 @@
-steps:
-  - name: 'groupbees/bigtesty'
-    script: |
-      bigtesty test \
-        --config /workspace/examples/bigtesty.yaml \
-        --project $PROJECT_ID
-    env:
-      - 'PROJECT_ID=$PROJECT_ID'

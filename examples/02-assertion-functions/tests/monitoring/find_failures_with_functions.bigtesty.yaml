@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
+
+description: Find the job failures, checked with Python assertion functions
+
+scenarios:
+  - name: find_failures_by_feature_name_with_functions
+    description: Custom Python assertion functions, in addition to a row count
+    given:
+      - table: monitoring.job_failure
+        rows_file: given/input_failures_feature_name.json
+    then:
+      - query_file: queries/find_failures_by_feature_name.sql
+        row_count: 1
+        functions:
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_have_creation_date
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_concern_feature_psg
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_are_recent
