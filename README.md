@@ -26,9 +26,10 @@ infrastructure.
 Python 3.11+ is required.
 
 ```bash
-pip install bigtesty
-# or
+# as a dev dependency of a uv project, the version is locked in uv.lock
 uv add --dev bigtesty
+# or as a standalone CLI
+uv tool install bigtesty
 ```
 
 BigTesty uses [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):

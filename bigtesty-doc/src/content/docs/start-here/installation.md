@@ -8,9 +8,10 @@ description: "Install the BigTesty Python package and authenticate on GCP."
 ## Installation
 
 ```bash
-pip install bigtesty
-# or, as a dev dependency of a uv project
+# as a dev dependency of a uv project, the version is locked in uv.lock
 uv add --dev bigtesty
+# or as a standalone CLI
+uv tool install bigtesty
 ```
 
 ## Authentication on GCP
