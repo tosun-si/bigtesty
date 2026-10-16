@@ -137,3 +137,30 @@ def test_given_query_jobs_when_run_then_bytes_billed_in_summary_and_junit_proper
     # THEN
     result.stdout.fnmatch_lines(["BigTesty: 2.0 KiB billed by 2 scenario(s)"])
     assert (pytester.path / "report.xml").read_text().count('<property name="bytes_billed" value="1024"') == 2
+
+
+def test_given_python_tests_using_the_fixture_when_run_then_infra_created_once_and_deleted_at_the_end(
+    project, fake_client
+):
+    # GIVEN
+    pytester = project()
+    pytester.makepyfile(
+        test_pipeline="""
+        def test_load(bigtesty_infra):
+            bigtesty_infra.load("monitoring.t", [{"x": 1}])
+
+        def test_query(bigtesty_infra):
+            assert bigtesty_infra.query("SELECT 1 AS x FROM monitoring.t") == [{"x": 1}]
+        """
+    )
+
+    # WHEN
+    result = pytester.runpytest("test_pipeline.py")
+
+    # THEN
+    result.assert_outcomes(passed=2)
+    assert (len(fake_client.created_datasets), len(fake_client.deleted_datasets), fake_client.queries) == (
+        1,
+        1,
+        [f"SELECT 1 AS x FROM `test-project.{fake_client.created_datasets[0].dataset_id}.t`"],
+    )

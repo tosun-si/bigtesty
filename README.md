@@ -232,6 +232,35 @@ BigTesty test executed: this test shows the duration of the whole run. pytest-xd
 
 The plugin does nothing in a project without BigTesty test files.
 
+## Use the ephemeral infra in Python tests
+
+To test Python code reading or writing BigQuery, `BigTestyInfra` creates the datasets and tables of a `bigtesty.yaml`
+once in a setup and deletes them once in a teardown, around as many tests as needed, with pytest or unittest:
+
+```python
+import pytest
+
+from bigtesty.testing import BigTestyInfra
+
+
+@pytest.fixture(scope="class")   # the scope is the lifecycle of the infra
+def infra():
+    with BigTestyInfra.from_config("bigtesty.yaml") as infra:
+        infra.load("monitoring.job_failure", [{"featureName": "featurePSG", "jobName": "job1"}])
+        build_failures_summary(infra.client, infra.dataset_id("monitoring"))   # the code under test
+        yield infra
+
+
+class TestFailuresSummary:
+    def test_one_row_per_feature(self, infra):
+        rows = infra.query("SELECT featureName, failuresCount FROM monitoring.job_failure_summary")
+        assert rows == [{"featureName": "featurePSG", "failuresCount": 1}]
+```
+
+`infra.query` rewrites the configured datasets as in the test files. The plugin also provides a session-scoped
+`bigtesty_infra` fixture. See the [Python tests](https://tosun-si.github.io/bigtesty/running-tests/python-tests/) page
+and the [`05-python-tests`](examples/05-python-tests/) example.
+
 ## Run with Docker
 
 ```bash

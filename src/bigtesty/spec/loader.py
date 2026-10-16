@@ -54,10 +54,14 @@ def discover_test_files(tests_dir: Path) -> list[Path]:
     return sorted(path for path in tests_dir.rglob("*") if path.name.endswith(TEST_FILE_SUFFIXES))
 
 
-def load_spec_files(tests_dir: Path) -> list[tuple[Path, SpecFile]]:
+def load_spec_files(tests_dir: Path, required: bool = True) -> list[tuple[Path, SpecFile]]:
+    """`required=False` accepts a config without test files, e.g. used only by Python tests (bigtesty.testing)."""
+    if not required and not tests_dir.is_dir():
+        return []
+
     test_files = discover_test_files(tests_dir)
 
-    if not test_files:
+    if not test_files and required:
         raise SpecError(f"No test file ({' / '.join('*' + s for s in TEST_FILE_SUFFIXES)}) found in {tests_dir}")
 
     return [(path, load_model(path, SpecFile)) for path in test_files]

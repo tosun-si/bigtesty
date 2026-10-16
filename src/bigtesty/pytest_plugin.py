@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     from bigtesty.report import ScenarioReport
     from bigtesty.spec.models import ScenarioSpec
+    from bigtesty.testing import BigTestyInfra
 
 TEST_FILE_SUFFIXES = (".bigtesty.yaml", ".bigtesty.yml", ".bigtesty.json")
 SESSION_PLUGIN_NAME = "bigtesty-session"
@@ -55,6 +56,28 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 def pytest_configure(config: pytest.Config) -> None:
     config.pluginmanager.register(BigTestySession(config), SESSION_PLUGIN_NAME)
+
+
+@pytest.fixture(scope="session")
+def bigtesty_infra(request: pytest.FixtureRequest) -> Iterator[BigTestyInfra]:
+    """
+    The datasets of the bigtesty.yaml config, created once for the pytest session and deleted at its end, for the
+    Python tests. For another lifecycle (class, module...), use `bigtesty.testing.BigTestyInfra` in a fixture.
+    """
+    from bigtesty.testing import BigTestyInfra, load_infra_plan
+
+    plan = load_infra_plan(
+        request.config.getoption("bigtesty_config"),
+        project=request.config.getoption("bigtesty_project"),
+        location=request.config.getoption("bigtesty_location"),
+        cleanup=request.config.getoption("bigtesty_cleanup"),
+        search_dir=request.config.invocation_params.dir,
+    )
+    infra = BigTestyInfra(plan, BigTestySession.client_factory(plan.project_id)).start()
+
+    yield infra
+
+    infra.stop(passed=request.session.testsfailed == 0)
 
 
 def pytest_collect_file(file_path: Path, parent: pytest.Collector) -> BigTestyFile | None:
