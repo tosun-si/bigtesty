@@ -44,8 +44,10 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: ${{ vars.DOCKERHUB_USERNAME }}/bigtesty
+        # latest only for the stable versions, not for the pre-releases (v1.2.0-rc1).
+        flavor: |
+          latest=auto
         tags: |
-          type=raw,value=latest
           type=semver,pattern={{major}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
           type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
           type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
