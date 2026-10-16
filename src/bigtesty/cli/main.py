@@ -71,12 +71,20 @@ def test_command(
         Literal["always", "on_success", "never"] | None,
         typer.Option("--cleanup", help="Override the cleanup mode of the config: always, on_success or never."),
     ] = None,
+    update: Annotated[
+        bool,
+        typer.Option(
+            "--update",
+            help="Rewrite the expected files (expected_file) that don't match from the actual rows, create the "
+            "missing ones.",
+        ),
+    ] = False,
     verbose: VerboseOption = False,
 ) -> None:
     _configure_logging(verbose)
 
     with _handle_errors():
-        plan = _load_plan(config, project, location, select)
+        plan = _load_plan(config, project, location, select, update_snapshots=update)
         if cleanup is not None:
             plan = replace(plan, cleanup=cleanup)
 
@@ -139,12 +147,13 @@ def _load_plan(
     location: str | None,
     select: str | None,
     tests_required: bool = True,
+    update_snapshots: bool = False,
 ) -> RunPlan:
     config_path = (config or find_config_file(Path.cwd())).resolve()
     project_config = load_model(config_path, ProjectConfig)
     spec_files = load_spec_files(config_path.parent / project_config.tests, required=tests_required)
 
-    return build_run_plan(config_path, project_config, spec_files, project, location, select)
+    return build_run_plan(config_path, project_config, spec_files, project, location, select, update_snapshots)
 
 
 @contextmanager

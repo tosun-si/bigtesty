@@ -42,5 +42,15 @@ def load_data_file(file_path: Path) -> Any:
     return json.loads(content)
 
 
+def write_data_file(file_path: Path, content: Any) -> None:
+    """Writes a YAML or JSON file, chosen by the extension, readable back by load_data_file."""
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if file_path.suffix in YAML_SUFFIXES:
+        file_path.write_text(yaml.safe_dump(content, sort_keys=False, allow_unicode=True))
+    else:
+        file_path.write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n")
+
+
 def load_text_file(file_path: Path) -> str:
     return file_path.read_text().strip()

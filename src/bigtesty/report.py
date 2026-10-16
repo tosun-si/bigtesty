@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -12,6 +13,8 @@ class CheckResult:
 class ThenReport:
     name: str
     checks: tuple[CheckResult, ...]
+    # The expected file rewritten from the actual rows by `bigtesty test --update`.
+    updated_file: Path | None = None
 
     @property
     def passed(self) -> bool:
@@ -49,6 +52,15 @@ class RunReport:
     def bytes_billed(self) -> int:
         return sum(report.bytes_billed for report in self.scenario_reports)
 
+    @property
+    def updated_files(self) -> tuple[Path, ...]:
+        return tuple(
+            then_report.updated_file
+            for report in self.scenario_reports
+            for then_report in report.then_reports
+            if then_report.updated_file is not None
+        )
+
 
 def format_run_report(run_report: RunReport) -> str:
     lines = [
@@ -58,6 +70,11 @@ def format_run_report(run_report: RunReport) -> str:
             for r in run_report.scenario_reports
         ),
         *(line for report in run_report.failed_reports for line in format_scenario_failure(report)),
+        *(
+            ["", f"Updated {len(run_report.updated_files)} expected file(s):", *map(str, run_report.updated_files)]
+            if run_report.updated_files
+            else []
+        ),
         "",
         f"{len(run_report.scenario_reports) - len(run_report.failed_reports)} passed, "
         f"{len(run_report.failed_reports)} failed, {format_bytes(run_report.bytes_billed)} billed "

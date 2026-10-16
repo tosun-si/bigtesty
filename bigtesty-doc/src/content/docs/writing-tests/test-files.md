@@ -90,6 +90,29 @@ The `RECORD` and `REPEATED` fields are compared recursively.
 
 In YAML files, `yes` / `no` / `on` / `off` and the dates stay strings: only `true` / `false` are booleans.
 
+### Update the expected files
+
+Instead of writing the expected rows by hand, write the query and let BigTesty write them from the actual rows:
+
+```bash
+bigtesty test --update                  # or pytest --bigtesty-update
+```
+
+```text
+Updated 1 expected file(s):
+tests/monitoring/then/expected_failures_feature_name.json
+```
+
+- Only the `expected_file` of the `then` blocks are written: a missing file is created, a file whose rows don't
+  match is rewritten, a matching file is not touched. The inline `expected` rows are never changed.
+- The file is written in JSON or YAML, depending on its extension, with the values normalized with the result
+  schema (e.g. a `TIMESTAMP` in ISO 8601 UTC, a `NUMERIC` as a string to keep its precision).
+- The `ignore_columns` are not written. With `compare_columns: expected_only`, only the columns already in the file
+  are kept.
+- The other assertions (`row_count`, `functions`) still run.
+
+Review the diff of the expected files before committing them: `--update` makes the current result the expected one.
+
 ### Custom assertion functions
 
 A function receives the actual and expected rows, normalized with the query result schema (a `TIMESTAMP` is an ISO

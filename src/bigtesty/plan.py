@@ -55,6 +55,8 @@ class ThenPlan:
     ignore_columns: tuple[str, ...]
     compare_columns: Literal["all", "expected_only"]
     float_tolerance: float | None
+    # The file of the expected rows, rewritten from the actual rows by `bigtesty test --update`.
+    expected_file: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,7 @@ class RunPlan:
     max_bytes_billed: int | None
     table_expiration_hours: int
     max_workers: int
+    update_snapshots: bool = False
 
     @property
     def dataset_ids(self) -> tuple[str, ...]:

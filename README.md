@@ -189,6 +189,7 @@ the result in BigQuery). As a safety net, their tables expire after `table_expir
 bigtesty test                      # run all the scenarios
 bigtesty test -k merge             # only the scenarios whose ID contains "merge"
 bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
+bigtesty test --update            # rewrite the expected files that don't match from the actual rows
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty schema -o schemas         # write the JSON Schemas
@@ -229,6 +230,7 @@ BigTesty test executed: this test shows the duration of the whole run. pytest-xd
 | `--bigtesty-project`   | `BIGTESTY_PROJECT`, `GOOGLE_CLOUD_PROJECT` | GCP project, overrides the config.                       |
 | `--bigtesty-location`  | `BIGTESTY_LOCATION`                        | Default location of the datasets, overrides the config.  |
 | `--bigtesty-cleanup`   |                                            | `always`, `on_success` or `never`, overrides the config. |
+| `--bigtesty-update`    |                                            | Rewrite the expected files that don't match from the actual rows. |
 
 The plugin does nothing in a project without BigTesty test files.
 

@@ -45,6 +45,7 @@ summary_is_upserted / rows:
 | `--bigtesty-project`   | `BIGTESTY_PROJECT`, `GOOGLE_CLOUD_PROJECT` | GCP project, overrides the config.                                        |
 | `--bigtesty-location`  | `BIGTESTY_LOCATION`                        | Default location of the datasets, overrides the config.                   |
 | `--bigtesty-cleanup`   |                                            | `always`, `on_success` or `never`, overrides the config.                  |
+| `--bigtesty-update`    |                                            | Rewrite the [expected files](/bigtesty/writing-tests/test-files/#update-the-expected-files) that don't match, create the missing ones. |
 
 ## How it works
 
