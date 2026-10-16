@@ -46,7 +46,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start here',
-          items: ['start-here/introduction', 'start-here/installation', 'start-here/docker'],
+          items: ['start-here/introduction', 'start-here/installation', 'start-here/docker', 'start-here/migration'],
         },
         {
           label: 'Writing tests',
