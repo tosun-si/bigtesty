@@ -1,1 +1,1 @@
-SELECT * FROM `monitoring.job_failure` WHERE featureName = 'featurePSG';
+SELECT * FROM `monitoring.job_failure` WHERE featureName = 'featurePSG'

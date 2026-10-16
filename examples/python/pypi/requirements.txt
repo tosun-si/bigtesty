@@ -1,1 +1,1 @@
-bigtesty==0.1.0a5
+bigtesty>=0.3

@@ -1,6 +1,5 @@
 variables:
   GOOGLE_PROJECT: "gb-poc-373711"
-  GOOGLE_REGION: "europe-west1"
 
 stages:
   - tests
@@ -14,8 +13,5 @@ tests:
   script:
     - |
       bigtesty test \
-        --project $GOOGLE_PROJECT \
-        --region $GOOGLE_REGION \
-        --root-test-folder $CI_PROJECT_DIR/examples/tests \
-        --root-tables-folder $CI_PROJECT_DIR/examples/tests/tables \
-        --tables-config-file $CI_PROJECT_DIR/examples/tests/tables/tables.json
+        --config $CI_PROJECT_DIR/examples/bigtesty.yaml \
+        --project $GOOGLE_PROJECT

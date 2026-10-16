@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
+
+description: Find the job failures
+
+scenarios:
+  - name: find_failures_by_feature_name
+    description: Fixtures and expected rows in separate files
+    given:
+      - table: monitoring.job_failure
+        rows_file: given/input_failures_feature_name.json
+    then:
+      - query_file: queries/find_failures_by_feature_name.sql
+        expected_file: then/expected_failures_feature_name.json
+
+  - name: find_failures_by_feature_name_with_functions
+    description: Custom Python assertion functions, in addition to a row count
+    given:
+      - table: monitoring.job_failure
+        rows_file: given/input_failures_feature_name.json
+    then:
+      - query_file: queries/find_failures_by_feature_name.sql
+        row_count: 1
+        functions:
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_have_creation_date
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_concern_feature_psg
+          - module: assertion_functions/failures_assertions.py
+            function: check_failures_are_recent
+
+  - name: find_failures_by_job_name
+    description: Inline rows, only the columns of the expected rows are compared
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: myFeature, jobName: jobPSG, componentType: myComponentType, dwhCreationDate: "2022-05-06 17:38:10" }
+          - { featureName: myFeature, jobName: otherJob, componentType: myComponentType, dwhCreationDate: "2022-05-07 08:00:00" }
+    then:
+      - query: SELECT * FROM `monitoring.job_failure` WHERE jobName = 'jobPSG'
+        compare_columns: expected_only
+        expected:
+          - { featureName: myFeature, jobName: jobPSG, dwhCreationDate: "2022-05-06T17:38:10Z" }
