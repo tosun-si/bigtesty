@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
+
+description: Upsert of the failures summary with a MERGE
+
+scenarios:
+  - name: merge_updates_existing_and_inserts_new_features
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: featurePSG, jobName: job1, dwhCreationDate: "2026-01-10 10:00:00" }
+          - { featureName: featurePSG, jobName: job2, dwhCreationDate: "2026-01-11 10:00:00" }
+          - { featureName: featureOM, jobName: job3, dwhCreationDate: "2026-01-12 10:00:00" }
+      - table: monitoring.job_failure_summary
+        rows:
+          - { featureName: featurePSG, failuresCount: 5, lastFailureDate: "2025-12-31 23:00:00" }
+    when:
+      sql_file: when/merge_failures_summary.sql
+    then:
+      - name: summary_is_upserted
+        table: monitoring.job_failure_summary
+        expected:
+          - { featureName: featurePSG, failuresCount: 7, lastFailureDate: "2026-01-11 10:00:00" }
+          - { featureName: featureOM, failuresCount: 1, lastFailureDate: "2026-01-12 10:00:00" }
+      - name: no_duplicated_feature
+        query: SELECT featureName FROM monitoring.job_failure_summary GROUP BY featureName HAVING COUNT(*) > 1
+        row_count: 0

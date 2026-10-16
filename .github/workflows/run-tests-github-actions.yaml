@@ -2,7 +2,6 @@ name: Run BigTesty Test
 
 env:
   GOOGLE_PROJECT: gb-poc-373711
-  GOOGLE_REGION: europe-west1
 
   WORKLOAD_IDENTITY_PROVIDER: 'projects/975119474255/locations/global/workloadIdentityPools/gb-github-actions-ci-cd-pool/providers/gb-github-actions-ci-cd-provider'
   SA_CI_CD_EMAIL: 'sa-bigtesty@gb-poc-373711.iam.gserviceaccount.com'
@@ -41,8 +40,5 @@ jobs:
       - name: 'Run BigTesty Tests'
         run: |
           uv run bigtesty test \
-            --project $GOOGLE_PROJECT \
-            --region $GOOGLE_REGION \
-            --root-test-folder $GITHUB_WORKSPACE/examples/tests \
-            --root-tables-folder $GITHUB_WORKSPACE/examples/tests/tables \
-            --tables-config-file $GITHUB_WORKSPACE/examples/tests/tables/tables.json
+            --config $GITHUB_WORKSPACE/examples/bigtesty.yaml \
+            --project $GOOGLE_PROJECT

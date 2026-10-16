@@ -8,7 +8,7 @@ sidebar_position: 1
 
 The tests can be executed with Cloud Build, via the official `BigTesty` `Docker` image
 
-**The Service Account (default or user-specified) needs to have the expected privileges to perform the actions in BigQuery and in the GCS bucket specified as backend URL**
+**The Service Account (default or user-specified) needs the `roles/bigquery.user` role on the test project.**
 
 An example of `yaml` file:
 
@@ -17,20 +17,16 @@ steps:
   - name: 'groupbees/bigtesty'
     script: |
       bigtesty test \
-        --project $PROJECT_ID \
-        --region $LOCATION \
-        --root-test-folder /workspace/examples/tests \
-        --root-tables-folder /workspace/examples/tests/tables \
-        --tables-config-file /workspace/examples/tests/tables/tables.json
+        --config /workspace/examples/bigtesty.yaml \
+        --project $PROJECT_ID
     env:
       - 'PROJECT_ID=$PROJECT_ID'
-      - 'LOCATION=$LOCATION'
 ```
 
 Some explanations:
 - `Cloud Build` proposes steps based on `Docker` images, the single step here is based on the `BigTesty` image
 - We can invoke command lines, from the `script` section, and we use the command line and the CLI to launch tests
-- This command line uses all the needed parameters, like the GCP project, region, the testing and tables files
+- This command line uses the needed parameters: the GCP project and the config file
 - By default, `Cloud Build` adds the folders and files of the current project, in a volume called `workspace`, that's why the parameters are specified from `/workspace`
 - Some elements are passed as environment variables and then used in the command line
 

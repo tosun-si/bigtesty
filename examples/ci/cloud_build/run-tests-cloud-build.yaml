@@ -2,11 +2,7 @@ steps:
   - name: 'groupbees/bigtesty'
     script: |
       bigtesty test \
-        --project $PROJECT_ID \
-        --region $LOCATION \
-        --root-test-folder /workspace/examples/tests \
-        --root-tables-folder /workspace/examples/tests/tables \
-        --tables-config-file /workspace/examples/tests/tables/tables.json
+        --config /workspace/examples/bigtesty.yaml \
+        --project $PROJECT_ID
     env:
       - 'PROJECT_ID=$PROJECT_ID'
-      - 'LOCATION=$LOCATION'

@@ -1,0 +1,270 @@
+{
+  "$defs": {
+    "DatasetSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9_]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dataset location, the project config location if not set.",
+          "title": "Location"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "tables": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TableSpec"
+          },
+          "title": "Tables",
+          "type": "array"
+        },
+        "ddl_files": {
+          "default": [],
+          "description": "Glob patterns of SQL files executed after the dataset creation (CREATE TABLE, VIEW, FUNCTION, PROCEDURE...). The references to the configured datasets are isolated like in the tests.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Ddl Files",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "DatasetSpec",
+      "type": "object"
+    },
+    "Partitioning": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "default": "DAY",
+          "enum": [
+            "HOUR",
+            "DAY",
+            "MONTH",
+            "YEAR"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Partitioning column, ingestion time partitioning if not set.",
+          "title": "Field"
+        }
+      },
+      "title": "Partitioning",
+      "type": "object"
+    },
+    "TableSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inline BigQuery JSON schema.",
+          "title": "Schema"
+        },
+        "schema_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "BigQuery JSON schema file.",
+          "title": "Schema File"
+        },
+        "partitioning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Partitioning"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "clustering": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 4,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clustering"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "TableSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "GCP project ID, can be overridden by the CLI or GOOGLE_PROJECT.",
+      "title": "Project"
+    },
+    "location": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Default BigQuery location of the datasets, e.g. EU.",
+      "title": "Location"
+    },
+    "tests": {
+      "default": "tests",
+      "description": "Directory containing the *.bigtesty.yaml test files.",
+      "title": "Tests",
+      "type": "string"
+    },
+    "datasets": {
+      "items": {
+        "$ref": "#/$defs/DatasetSpec"
+      },
+      "minItems": 1,
+      "title": "Datasets",
+      "type": "array"
+    },
+    "project_aliases": {
+      "default": [],
+      "description": "Projects referenced in the SQL (e.g. the production project) whose references to the configured datasets are rewritten to the ephemeral datasets.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Project Aliases",
+      "type": "array"
+    },
+    "cleanup": {
+      "default": "always",
+      "enum": [
+        "always",
+        "on_success",
+        "never"
+      ],
+      "title": "Cleanup",
+      "type": "string"
+    },
+    "max_bytes_billed": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Maximum bytes billed of each query job.",
+      "title": "Max Bytes Billed"
+    },
+    "table_expiration_hours": {
+      "default": 6,
+      "description": "Safety net if the process is killed before cleanup.",
+      "exclusiveMinimum": 0,
+      "title": "Table Expiration Hours",
+      "type": "integer"
+    },
+    "max_workers": {
+      "default": 8,
+      "description": "Number of scenarios and BigQuery jobs executed in parallel.",
+      "exclusiveMinimum": 0,
+      "title": "Max Workers",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "datasets"
+  ],
+  "title": "ProjectConfig",
+  "type": "object"
+}

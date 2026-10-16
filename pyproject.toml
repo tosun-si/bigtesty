@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "bigtesty"
-version = "0.2.0"
+version = "0.3.0"
 description = "BigTesty is an integration testing framework for BigQuery"
 readme = "README.md"
 license = "MIT"
@@ -23,6 +23,8 @@ classifiers = [
 dependencies = [
     "deepdiff>=7.0",
     "google-cloud-bigquery>=3.25",
+    "pydantic>=2.7",
+    "pyyaml>=6",
     "typer>=0.12",
 ]
 
@@ -40,10 +42,12 @@ dev = [
     "mypy>=1.11",
     "pytest>=8.2",
     "ruff>=0.6",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 python_files = "test_*.py"
 
 [tool.ruff]
