@@ -21,3 +21,7 @@ changelog:
   - title: ⬆️ Dependencies
     labels:
     - dependencies
+  # The PRs without a label of the categories above.
+  - title: 🔧 Other Changes
+    labels:
+    - '*'
