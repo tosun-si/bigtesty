@@ -1,4 +1,4 @@
-![bigtesty_logo_with_slogan.png](bigtesty-doc%2Fstatic%2Fimg%2Fbigtesty_logo_with_slogan.png)
+![bigtesty_logo_with_slogan.png](https://raw.githubusercontent.com/tosun-si/bigtesty/main/bigtesty-doc/src/assets/bigtesty_logo_with_slogan.png)
 
 BigTesty is an integration testing framework for BigQuery, running the tests on a real and short-lived
 infrastructure.
@@ -10,7 +10,7 @@ infrastructure.
   Several developers and CI pipelines can run the tests at the same time.
 - **Production SQL unchanged**: the references to your datasets are rewritten to the isolated datasets.
 
-![bigtesty_schema.png](bigtesty-doc%2Fstatic%2Fimg%2Fbigtesty_schema.png)
+![bigtesty_schema.png](https://raw.githubusercontent.com/tosun-si/bigtesty/main/bigtesty-doc/src/assets/bigtesty_schema.png)
 
 ## Installation
 

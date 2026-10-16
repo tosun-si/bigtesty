@@ -1,0 +1,34 @@
+---
+title: BigTesty
+description: Integration testing framework for BigQuery, on a real and short-lived infrastructure.
+template: splash
+hero:
+  tagline: Integration tests for BigQuery, on the real engine and a short-lived infrastructure.
+  image:
+    file: ../../assets/bigtesty_logo.png
+  actions:
+    - text: Get started
+      link: /bigtesty/start-here/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/tosun-si/bigtesty
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="The real BigQuery engine" icon="approve-check">
+    No emulator: the SQL behaves exactly as in production, scripts, `MERGE` and procedures included.
+  </Card>
+  <Card title="Given / When / Then" icon="document">
+    Test files in YAML or JSON: load rows, run the SQL under test, assert on query results or table contents.
+  </Card>
+  <Card title="Isolated and ephemeral" icon="random">
+    Each scenario of each run gets its own datasets, created and destroyed by BigTesty. Run in parallel, safely.
+  </Card>
+  <Card title="CLI and pytest" icon="seti:python">
+    `bigtesty test` or `pytest`: one test per scenario, typed comparison and readable diffs.
+  </Card>
+</CardGrid>
