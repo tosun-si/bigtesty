@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
 # ---------- runtime (no uv) ----------
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.15-slim-bookworm AS runtime
 ARG APP_DIR
 ENV PATH="${APP_DIR}/.venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
