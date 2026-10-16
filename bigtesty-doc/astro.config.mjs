@@ -6,6 +6,27 @@ import starlightLinksValidator from 'starlight-links-validator';
 export default defineConfig({
   site: 'https://tosun-si.github.io',
   base: '/bigtesty',
+  // Old Docusaurus URLs, still linked from articles and indexed by search engines.
+  redirects: {
+    '/docs': '/bigtesty/start-here/introduction/',
+    '/docs/intro': '/bigtesty/start-here/introduction/',
+    '/docs/category/installation': '/bigtesty/start-here/installation/',
+    '/docs/installation/installation-pypi': '/bigtesty/start-here/installation/',
+    '/docs/installation/installation-docker': '/bigtesty/start-here/docker/',
+    '/docs/category/files-and-code-structure': '/bigtesty/writing-tests/project-structure/',
+    '/docs/files-and-code-structure/testing-code-structure': '/bigtesty/writing-tests/project-structure/',
+    '/docs/files-and-code-structure/project-structure': '/bigtesty/writing-tests/project-structure/',
+    '/docs/files-and-code-structure/tables-config-file': '/bigtesty/writing-tests/project-config/',
+    '/docs/files-and-code-structure/project-config': '/bigtesty/writing-tests/project-config/',
+    '/docs/files-and-code-structure/testing-definition-files': '/bigtesty/writing-tests/test-files/',
+    '/docs/files-and-code-structure/test-files': '/bigtesty/writing-tests/test-files/',
+    '/docs/cli': '/bigtesty/running-tests/cli/',
+    '/docs/pytest': '/bigtesty/running-tests/pytest/',
+    '/docs/category/tests-execution-from-ci-tools': '/bigtesty/running-tests/ci/github-actions/',
+    '/docs/ci-tools-tests-execution/ci-execution-cloud-github-actions': '/bigtesty/running-tests/ci/github-actions/',
+    '/docs/ci-tools-tests-execution/ci-execution-cloud-gitlab-ci': '/bigtesty/running-tests/ci/gitlab-ci/',
+    '/docs/ci-tools-tests-execution/ci-execution-cloud-build': '/bigtesty/running-tests/ci/cloud-build/',
+  },
   integrations: [
     starlight({
       title: 'BigTesty',
