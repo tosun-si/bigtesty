@@ -4,4 +4,5 @@ repos:
   hooks:
   - id: check-yaml
   - id: end-of-file-fixer
+    exclude: \.excalidraw$  # Excalidraw saves without a final newline
   - id: trailing-whitespace
