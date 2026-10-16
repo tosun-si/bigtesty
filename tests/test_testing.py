@@ -170,3 +170,37 @@ def test_given_project_sources_when_load_infra_plan_then_same_precedence_as_the_
 
     # THEN
     assert plan.project_id == expected
+
+
+@pytest.mark.parametrize(
+    ("call", "expected_query"),
+    [
+        # --- Case 1: truncate of one table ---
+        (
+            lambda infra: infra.truncate("monitoring.job_failure"),
+            "TRUNCATE TABLE `test-project.monitoring_abc_0.job_failure`;",
+        ),
+        # --- Case 2: reset truncates all the tables of the config, not the views ---
+        (lambda infra: infra.reset(), "TRUNCATE TABLE `test-project.monitoring_abc_0.job_failure`;"),
+    ],
+)
+def test_given_started_infra_when_truncate_or_reset_then_one_truncate_script(tmp_path, call, expected_query):
+    # GIVEN
+    client = FakeBigQueryClient()
+    infra = _infra(tmp_path, client)
+
+    # WHEN
+    call(infra)
+
+    # THEN
+    assert client.queries == [expected_query]
+
+
+def test_given_table_not_in_config_when_truncate_then_error_without_query(tmp_path):
+    # GIVEN
+    client = FakeBigQueryClient()
+
+    # WHEN / THEN
+    with pytest.raises(BigTestyError, match="not declared"):
+        _infra(tmp_path, client).truncate("monitoring.job_failure", "monitoring.v_jobs")
+    assert client.queries == []
