@@ -58,6 +58,7 @@ export default defineConfig({
             'running-tests/cli',
             'running-tests/pytest',
             'running-tests/python-tests',
+            'running-tests/other-languages',
             {
               label: 'CI',
               items: ['running-tests/ci/github-actions', 'running-tests/ci/gitlab-ci', 'running-tests/ci/cloud-build'],

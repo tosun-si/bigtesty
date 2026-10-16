@@ -10,6 +10,8 @@ bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
 bigtesty test --update            # rewrite the expected files that don't match from the actual rows
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
+bigtesty infra create -o json      # create the infra for the tests of another language
+bigtesty infra destroy --run-id x  # and delete it
 bigtesty schema -o schemas         # write the JSON Schemas of the config and test files
 bigtesty --version                 # or bigtesty version
 ```
@@ -32,6 +34,11 @@ test data is loaded with load jobs, which are free.
 
 The exit code is `0` when all the scenarios pass, `1` when a scenario fails and `2` for an invalid config or test
 file.
+
+## `bigtesty infra create` / `bigtesty infra destroy`
+
+Create the datasets, tables and DDL objects of the config and show their IDs (`--output json` for a program), then
+delete them by run ID: the infra for the tests of [other languages](/bigtesty/running-tests/other-languages/).
 
 ## `bigtesty gc`
 
