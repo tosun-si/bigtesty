@@ -247,28 +247,15 @@ Examples for [GitHub Actions](.github/workflows/run-tests-github-actions.yaml),
 [Cloud Build](examples/ci/cloud_build/run-tests-cloud-build.yaml) and
 [GitLab CI](examples/ci/gitlab_ci/.gitlab-ci.yml).
 
-## Migrating from 0.2.x to 0.3.0
+## Migrating from 0.x
 
-The version `0.3.0` introduces a new format for the config and test files:
+BigTesty 1.0 replaces Pulumi by the BigQuery client and introduces a new config and test file format:
+`tables.json` becomes a `bigtesty.yaml` config file, the `definition_*.json` files become `*.bigtesty.yaml` /
+`*.bigtesty.json` test files, and the `--iac-backend-url` and folder options of the CLI are replaced by `--config`.
+Python 3.11+ is required.
 
-- The `tables.json` file and the `--root-test-folder`, `--root-tables-folder`, `--tables-config-file`, `--region`
-  and `--keep-infra` options are replaced by the `bigtesty.yaml` config file and `--config`, `--location` and
-  `--cleanup`.
-- The `definition_*.json` files are replaced by `*.bigtesty.yaml` / `*.bigtesty.json` test files:
-  - `destination_dataset` + `destination_table` → `table: dataset.table`, `input` / `input_file_path` →
-    `rows` / `rows_file`,
-  - `actual` / `actual_file_path` → `query` / `query_file`, `expected_file_path` → `expected_file`,
-  - `assertion_type` is removed: the `expected` rows, `row_count` and `functions` can be combined,
-  - `expected_functions` → `functions`,
-  - `fields_to_ignore` (regexes) → `ignore_columns` (column names), often not needed anymore thanks to the typed
-    comparison.
-- The paths are relative to the file that declares them.
-- The custom assertion functions receive the rows normalized with the query result schema.
-
-## Migrating from 0.1.x to 0.2.0
-
-The version `0.2.0` removes Pulumi: the `--iac-backend-url` option is removed, Python 3.11+ is required, the
-working and home directory of the Docker image is `/usr/local/src/app`.
+The [migration guide](https://tosun-si.github.io/bigtesty/start-here/migration/) gives the mapping of every option
+and field, with before / after examples.
 
 ## Documentation
 
