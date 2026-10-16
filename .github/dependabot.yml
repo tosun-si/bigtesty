@@ -39,8 +39,13 @@ updates:
       docs:
         patterns: ['*']
 
+  # The builder (uv:python3.X) and runtime (python:3.X) images must use the same Python version: a Python upgrade
+  # is done by hand on both, Dependabot only proposes the patch updates.
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
     labels: [dependencies]
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
