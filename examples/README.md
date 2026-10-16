@@ -9,6 +9,7 @@ README with the commands.
 | [`02-assertion-functions`](02-assertion-functions/) | Python assertion functions on the query result, a row count, an inline table schema |
 | [`03-merge-with-ddl`](03-merge-with-ddl/) | A `when` step running a `MERGE` script, a view created with a DDL file, several `then` assertions on a table and a query |
 | [`04-uv-project`](04-uv-project/) | A project with BigTesty as a uv dev dependency from PyPI, tests run with pytest, CI with GitHub Actions, GitLab CI and Cloud Build |
+| [`05-python-tests`](05-python-tests/) | Python code writing to BigQuery tested with pytest and unittest: one infra created and deleted once for several tests |
 
 They need Application Default Credentials and the `roles/bigquery.user` role on the test project:
 
@@ -25,6 +26,10 @@ uv run bigtesty test --config examples/02-assertion-functions/bigtesty.yaml
 uv run bigtesty test --config examples/03-merge-with-ddl/bigtesty.yaml
 ```
 
-The example 04 is a standalone uv project, see its [README](04-uv-project/).
+The example 04 is a standalone uv project, see its [README](04-uv-project/). The example 05 runs with pytest:
+
+```bash
+uv run pytest examples/05-python-tests --bigtesty-config examples/05-python-tests/bigtesty.yaml
+```
 
 Every scenario runs on its own datasets, deleted at the end of the run: nothing to clean up.

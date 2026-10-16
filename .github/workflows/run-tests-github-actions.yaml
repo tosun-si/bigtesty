@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        example: [01-queries, 02-assertion-functions, 03-merge-with-ddl]
+        example: [01-queries, 02-assertion-functions, 03-merge-with-ddl, 05-python-tests]
 
     steps:
       - name: 'Checkout'
@@ -40,7 +40,12 @@ jobs:
 
       # BigTesty from the sources of the repo.
       - name: 'Set up BigTesty'
-        run: uv sync --frozen --no-dev
+        run: uv sync --frozen
 
       - name: 'Run the example'
-        run: uv run bigtesty test --config examples/${{ matrix.example }}/bigtesty.yaml
+        run: |
+          if [ "${{ matrix.example }}" = "05-python-tests" ]; then
+            uv run pytest examples/05-python-tests --bigtesty-config examples/05-python-tests/bigtesty.yaml
+          else
+            uv run bigtesty test --config examples/${{ matrix.example }}/bigtesty.yaml
+          fi

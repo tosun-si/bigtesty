@@ -94,7 +94,8 @@ def validate_command(config: ConfigOption = None, verbose: VerboseOption = False
     _configure_logging(verbose)
 
     with _handle_errors():
-        plan = _load_plan(config, project="validation", location=None, select=None)
+        # A config without test files is valid: it can be used only by Python tests (bigtesty.testing).
+        plan = _load_plan(config, project="validation", location=None, select=None, tests_required=False)
 
     typer.secho(f"Valid: {len(plan.datasets)} dataset(s), {len(plan.scenarios)} scenario(s)", fg=typer.colors.GREEN)
 
@@ -132,10 +133,16 @@ def version_command() -> None:
     typer.echo(__version__)
 
 
-def _load_plan(config: Path | None, project: str | None, location: str | None, select: str | None) -> RunPlan:
+def _load_plan(
+    config: Path | None,
+    project: str | None,
+    location: str | None,
+    select: str | None,
+    tests_required: bool = True,
+) -> RunPlan:
     config_path = (config or find_config_file(Path.cwd())).resolve()
     project_config = load_model(config_path, ProjectConfig)
-    spec_files = load_spec_files(config_path.parent / project_config.tests)
+    spec_files = load_spec_files(config_path.parent / project_config.tests, required=tests_required)
 
     return build_run_plan(config_path, project_config, spec_files, project, location, select)
 
