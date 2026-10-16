@@ -164,3 +164,24 @@ def test_given_python_tests_using_the_fixture_when_run_then_infra_created_once_a
         1,
         [f"SELECT 1 AS x FROM `test-project.{fake_client.created_datasets[0].dataset_id}.t`"],
     )
+
+
+def test_given_update_option_when_run_then_missing_expected_file_created(project, fake_client):
+    # GIVEN
+    pytester = project(
+        test_file="""
+        scenarios:
+          - name: snapshot
+            then:
+              - query: SELECT 1 AS x FROM monitoring.t
+                expected_file: expected.json
+        """
+    )
+
+    # WHEN
+    result = pytester.runpytest("--bigtesty-update")
+
+    # THEN
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines(["BigTesty: updated *expected.json"])
+    assert (pytester.path / "tests" / "expected.json").read_text() == '[\n  {\n    "x": 1\n  }\n]\n'

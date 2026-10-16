@@ -52,6 +52,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=None,
         help="Cleanup mode of the ephemeral infra, overrides the config.",
     )
+    group.addoption(
+        "--bigtesty-update",
+        action="store_true",
+        default=False,
+        help="Rewrite the expected files that don't match from the actual rows, create the missing ones.",
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -157,6 +163,14 @@ class BigTestySession:
             terminalreporter.write_line(
                 f"BigTesty: {format_bytes(bytes_billed)} billed by {len(self.reports)} scenario(s)"
             )
+            updated_files = [
+                then_report.updated_file
+                for report in self.reports.values()
+                for then_report in report.then_reports
+                if then_report.updated_file is not None
+            ]
+            for updated_file in updated_files:
+                terminalreporter.write_line(f"BigTesty: updated {updated_file}")
 
     def report_for(self, item: BigTestyItem) -> ScenarioReport:
         if self.reports is None:
@@ -198,6 +212,7 @@ class BigTestySession:
                 [(item.path, item.scenario) for item in items],
                 project_id=self.config.getoption("bigtesty_project"),
                 location=self.config.getoption("bigtesty_location"),
+                update_snapshots=self.config.getoption("bigtesty_update"),
             )
             if cleanup := self.config.getoption("bigtesty_cleanup"):
                 plan = replace(plan, cleanup=cleanup)

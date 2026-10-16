@@ -11,11 +11,13 @@ from google.cloud import bigquery
 from google.cloud.bigquery import Client
 
 from bigtesty.infra.ephemeral_infra import BIGTESTY_RUN_ID_LABEL_KEY, unique_dataset_id
-from bigtesty.plan import GivenPlan, RunPlan, ScenarioPlan, ThenPlan
-from bigtesty.report import ScenarioReport, ThenReport
+from bigtesty.plan import GivenPlan, Row, RunPlan, ScenarioPlan, ThenPlan
+from bigtesty.report import CheckResult, ScenarioReport, ThenReport
+from bigtesty.spec.files import write_data_file
 from bigtesty.sql_rewrite import rewrite_datasets
 from bigtesty.then.assertions import check_then
 from bigtesty.then.normalization import normalize_rows
+from bigtesty.then.snapshot import snapshot_rows
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
         if scenario.when_sql is not None:
             query(scenario.when_sql)
 
-        then_reports = tuple(_run_then(query, then) for then in scenario.then)
+        then_reports = tuple(_run_then(query, then, context.plan.update_snapshots) for then in scenario.then)
         report = ScenarioReport(
             scenario.scenario_id, then_reports, time.perf_counter() - start, bytes_billed=sum(bytes_billed)
         )
@@ -112,11 +114,31 @@ def _load_given(context: RunContext, scenario: ScenarioPlan, given: GivenPlan) -
     context.client.load_table_from_json(list(given.rows), destination, job_config=job_config).result()
 
 
-def _run_then(query: Callable[[str], bigquery.table.RowIterator], then: ThenPlan) -> ThenReport:
+def _run_then(
+    query: Callable[[str], bigquery.table.RowIterator], then: ThenPlan, update_snapshots: bool = False
+) -> ThenReport:
     rows = query(then.query)
     schema = list(rows.schema or [])
 
     actual = normalize_rows([dict(row.items()) for row in rows], schema)
     expected = normalize_rows(then.expected, schema) if then.expected is not None else None
+    checks = check_then(then, actual, expected)
 
-    return ThenReport(name=then.name, checks=check_then(then, actual, expected))
+    if update_snapshots and then.expected_file is not None and not _rows_match(checks, expected):
+        snapshot = snapshot_rows(then, actual, expected)
+        write_data_file(then.expected_file, snapshot)
+        logger.info("Updated %s", then.expected_file)
+
+        # The other assertions (row count, functions) still run, on the new expected rows.
+        return ThenReport(
+            name=then.name,
+            checks=check_then(then, actual, normalize_rows(snapshot, schema)),
+            updated_file=then.expected_file,
+        )
+
+    return ThenReport(name=then.name, checks=checks)
+
+
+def _rows_match(checks: tuple[CheckResult, ...], expected: list[Row] | None) -> bool:
+    """False when there is no expected file yet, or when the comparison of the rows fails."""
+    return expected is not None and all(check.passed for check in checks if check.check == "rows")

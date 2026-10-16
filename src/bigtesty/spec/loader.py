@@ -74,11 +74,13 @@ def build_run_plan(
     project_id: str | None = None,
     location: str | None = None,
     select: str | None = None,
+    update_snapshots: bool = False,
 ) -> RunPlan:
     """
     Resolves the config and the test files into a RunPlan.
     The CLI values (project_id, location) take precedence over the config ones.
     `select` keeps only the scenarios whose ID contains the given text.
+    `update_snapshots` rewrites the failing expected files from the actual rows, and allows missing ones.
     """
     tests_dir = config_path.parent / config.tests
 
@@ -89,7 +91,9 @@ def build_run_plan(
         if select is None or select in scenario_id(tests_dir, spec_path, scenario.name)
     ]
 
-    return build_run_plan_for_scenarios(config_path, config, selected_scenarios, project_id, location)
+    return build_run_plan_for_scenarios(
+        config_path, config, selected_scenarios, project_id, location, update_snapshots=update_snapshots
+    )
 
 
 def build_run_plan_for_scenarios(
@@ -98,6 +102,7 @@ def build_run_plan_for_scenarios(
     scenarios: list[tuple[Path, ScenarioSpec]],
     project_id: str | None = None,
     location: str | None = None,
+    update_snapshots: bool = False,
 ) -> RunPlan:
     """Resolves the config and the given scenarios, with the path of their test file, into a RunPlan."""
     resolved_project_id = project_id or config.project
@@ -116,7 +121,12 @@ def build_run_plan_for_scenarios(
         ),
         scenarios=tuple(
             to_scenario_plan(
-                scenario_id(tests_dir, spec_path, scenario.name), index, spec_path.parent, scenario, dataset_ids
+                scenario_id(tests_dir, spec_path, scenario.name),
+                index,
+                spec_path.parent,
+                scenario,
+                dataset_ids,
+                update_snapshots=update_snapshots,
             )
             for index, (spec_path, scenario) in enumerate(scenarios)
         ),
@@ -124,6 +134,7 @@ def build_run_plan_for_scenarios(
         max_bytes_billed=config.max_bytes_billed,
         table_expiration_hours=config.table_expiration_hours,
         max_workers=config.max_workers,
+        update_snapshots=update_snapshots,
     )
 
 
@@ -179,6 +190,7 @@ def to_scenario_plan(
     spec_dir: Path,
     scenario: ScenarioSpec,
     dataset_ids: set[str],
+    update_snapshots: bool = False,
 ) -> ScenarioPlan:
     when = scenario.when
 
@@ -191,7 +203,7 @@ def to_scenario_plan(
             None if when is None else when.sql if when.sql is not None else load_text_file(spec_dir / when.sql_file)  # type: ignore[operator]
         ),
         then=tuple(
-            to_then_plan(scenario_id, spec_dir, then_index, then, dataset_ids)
+            to_then_plan(scenario_id, spec_dir, then_index, then, dataset_ids, update_snapshots)
             for then_index, then in enumerate(scenario.then)
         ),
     )
@@ -212,6 +224,7 @@ def to_then_plan(
     then_index: int,
     then: ThenSpec,
     dataset_ids: set[str],
+    update_snapshots: bool = False,
 ) -> ThenPlan:
     if then.table is not None:
         _check_configured_dataset(scenario_id, then.table.split(".")[0], dataset_ids)
@@ -224,11 +237,13 @@ def to_then_plan(
         else load_text_file(spec_dir / then.query_file)  # type: ignore[operator]
     )
 
+    expected_file = spec_dir / then.expected_file if then.expected_file is not None else None
+    # With update_snapshots, a missing expected file is created from the actual rows.
     expected = (
         then.expected
         if then.expected is not None
-        else _load_list(spec_dir / then.expected_file)
-        if then.expected_file is not None
+        else _load_list(expected_file)
+        if expected_file is not None and (expected_file.exists() or not update_snapshots)
         else None
     )
 
@@ -242,6 +257,7 @@ def to_then_plan(
         ignore_columns=tuple(then.ignore_columns),
         compare_columns=then.compare_columns,
         float_tolerance=then.float_tolerance,
+        expected_file=expected_file,
     )
 
 

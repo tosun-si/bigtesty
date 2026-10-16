@@ -7,6 +7,7 @@ description: "The bigtesty command line: test, validate, gc, schema."
 bigtesty test                      # run all the scenarios
 bigtesty test -k merge             # only the scenarios whose ID contains "merge"
 bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
+bigtesty test --update            # rewrite the expected files that don't match from the actual rows
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty schema -o schemas         # write the JSON Schemas of the config and test files
@@ -22,6 +23,7 @@ bigtesty --version                 # or bigtesty version
 | `--location`      | `BIGTESTY_LOCATION`                        | Default location of the datasets, overrides the config.                   |
 | `--select`, `-k`  |                                            | Run only the scenarios whose ID contains this text.                       |
 | `--cleanup`       |                                            | `always`, `on_success` or `never`, overrides the config.                  |
+| `--update`        |                                            | Rewrite the [expected files](/bigtesty/writing-tests/test-files/#update-the-expected-files) that don't match, create the missing ones. |
 | `--verbose`, `-v` |                                            | Show the executed SQL and the debug logs.                                 |
 
 The report shows the duration and the bytes billed of each scenario, and the total bytes billed of the run. The
