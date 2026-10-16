@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "bigtesty"
-version = "0.3.0"
+version = "0.3.0rc1"
 description = "BigTesty is an integration testing framework for BigQuery"
 readme = "README.md"
 license = "MIT"
