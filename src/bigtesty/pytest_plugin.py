@@ -93,6 +93,8 @@ class BigTestyItem(pytest.Item):
         session = self.config.pluginmanager.get_plugin(SESSION_PLUGIN_NAME)
         assert isinstance(session, BigTestySession)
         report = session.report_for(self)
+        # Exported as a property of the test case by --junitxml.
+        self.user_properties.append(("bytes_billed", report.bytes_billed))
 
         if not report.passed:
             raise ScenarioFailedError(report)
@@ -123,6 +125,15 @@ class BigTestySession:
     def pytest_collection_modifyitems(self, items: list[pytest.Item]) -> None:
         # trylast: after the deselection of -k / -m by the other plugins.
         self.items = [item for item in items if isinstance(item, BigTestyItem)]
+
+    def pytest_terminal_summary(self, terminalreporter: pytest.TerminalReporter) -> None:
+        from bigtesty.report import format_bytes
+
+        if self.reports:
+            bytes_billed = sum(report.bytes_billed for report in self.reports.values())
+            terminalreporter.write_line(
+                f"BigTesty: {format_bytes(bytes_billed)} billed by {len(self.reports)} scenario(s)"
+            )
 
     def report_for(self, item: BigTestyItem) -> ScenarioReport:
         if self.reports is None:

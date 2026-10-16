@@ -131,3 +131,19 @@ def test_given_max_bytes_billed_when_run_tests_then_query_jobs_have_the_limit(
     # THEN
     api_values = {config.to_api_repr()["query"].get("maximumBytesBilled") for config in client.query_job_configs}
     assert api_values == {expected_api_value}
+
+
+def test_given_query_jobs_when_run_tests_then_bytes_billed_are_summed_per_scenario_including_before_an_error(tmp_path):
+    # GIVEN
+    def query_handler(query: str) -> FakeRowIterator:
+        if query.startswith("DELETE"):
+            raise RuntimeError("boom")
+        return FakeRowIterator(rows=[{"x": 1}])
+
+    client = FakeBigQueryClient(query_handler=query_handler, bytes_billed_per_query=1024)
+
+    # WHEN
+    run_report = run_tests(client, _plan(tmp_path), "abc")
+
+    # THEN: nominal = DDL then error on the when, other = DDL + then
+    assert ([r.bytes_billed for r in run_report.scenario_reports], run_report.bytes_billed) == ([1024, 2048], 3072)

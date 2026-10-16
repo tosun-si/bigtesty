@@ -24,6 +24,10 @@ bigtesty --version                 # or bigtesty version
 | `--cleanup`       |                                            | `always`, `on_success` or `never`, overrides the config.                  |
 | `--verbose`, `-v` |                                            | Show the executed SQL and the debug logs.                                 |
 
+The report shows the duration and the bytes billed of each scenario, and the total bytes billed of the run. The
+bytes billed are the ones of the query jobs (DDL, `when` and `then`), BigQuery bills at least 10 MiB per query; the
+test data is loaded with load jobs, which are free.
+
 The exit code is `0` when all the scenarios pass, `1` when a scenario fails and `2` for an invalid config or test
 file.
 

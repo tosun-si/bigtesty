@@ -4,6 +4,7 @@ Execution of one scenario on its isolated datasets: DDL files, then given, when 
 
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from google.cloud import bigquery
@@ -33,22 +34,37 @@ class RunContext:
 def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
     """Runs a scenario. An error is reported in the scenario report, it doesn't stop the other scenarios."""
     start = time.perf_counter()
+    # Kept outside of the try: the bytes billed before an error are reported too.
+    bytes_billed: list[int] = []
+
+    def query(sql: str) -> bigquery.table.RowIterator:
+        rows, job_bytes_billed = _run_query(context, scenario, sql)
+        bytes_billed.append(job_bytes_billed)
+        return rows
 
     try:
         for dataset in context.plan.datasets:
             for ddl_statement in dataset.ddl_statements:
-                _run_query(context, scenario, ddl_statement)
+                query(ddl_statement)
 
         for given in scenario.given:
             _load_given(context, scenario, given)
 
         if scenario.when_sql is not None:
-            _run_query(context, scenario, scenario.when_sql)
+            query(scenario.when_sql)
 
-        then_reports = tuple(_run_then(context, scenario, then) for then in scenario.then)
-        report = ScenarioReport(scenario.scenario_id, then_reports, time.perf_counter() - start)
+        then_reports = tuple(_run_then(query, then) for then in scenario.then)
+        report = ScenarioReport(
+            scenario.scenario_id, then_reports, time.perf_counter() - start, bytes_billed=sum(bytes_billed)
+        )
     except Exception as e:  # noqa: BLE001, any error fails only this scenario
-        report = ScenarioReport(scenario.scenario_id, (), time.perf_counter() - start, error=f"{type(e).__name__}: {e}")
+        report = ScenarioReport(
+            scenario.scenario_id,
+            (),
+            time.perf_counter() - start,
+            error=f"{type(e).__name__}: {e}",
+            bytes_billed=sum(bytes_billed),
+        )
 
     logger.info("%s %s", "PASSED" if report.passed else "FAILED", scenario.scenario_id)
     return report
@@ -64,7 +80,8 @@ def scenario_sql(context: RunContext, scenario: ScenarioPlan, sql: str) -> str:
     )
 
 
-def _run_query(context: RunContext, scenario: ScenarioPlan, sql: str) -> bigquery.table.RowIterator:
+def _run_query(context: RunContext, scenario: ScenarioPlan, sql: str) -> tuple[bigquery.table.RowIterator, int]:
+    """Returns the rows and the bytes billed of the query job (for a script, the sum of its child jobs)."""
     query = scenario_sql(context, scenario, sql)
     logger.debug("[%s] Executing:\n%s", scenario.scenario_id, query)
 
@@ -73,7 +90,9 @@ def _run_query(context: RunContext, scenario: ScenarioPlan, sql: str) -> bigquer
     job_config = bigquery.QueryJobConfig(
         labels=context.labels, **({"maximum_bytes_billed": max_bytes_billed} if max_bytes_billed else {})
     )
-    return context.client.query(query, job_config=job_config).result()
+    job = context.client.query(query, job_config=job_config)
+    rows = job.result()
+    return rows, job.total_bytes_billed or 0
 
 
 def _load_given(context: RunContext, scenario: ScenarioPlan, given: GivenPlan) -> None:
@@ -93,8 +112,8 @@ def _load_given(context: RunContext, scenario: ScenarioPlan, given: GivenPlan) -
     context.client.load_table_from_json(list(given.rows), destination, job_config=job_config).result()
 
 
-def _run_then(context: RunContext, scenario: ScenarioPlan, then: ThenPlan) -> ThenReport:
-    rows = _run_query(context, scenario, then.query)
+def _run_then(query: Callable[[str], bigquery.table.RowIterator], then: ThenPlan) -> ThenReport:
+    rows = query(then.query)
     schema = list(rows.schema or [])
 
     actual = normalize_rows([dict(row.items()) for row in rows], schema)

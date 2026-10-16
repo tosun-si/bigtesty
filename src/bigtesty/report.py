@@ -24,6 +24,8 @@ class ScenarioReport:
     then_reports: tuple[ThenReport, ...]
     duration_seconds: float
     error: str | None = None
+    # Bytes billed by the query jobs of the scenario (DDL, when, then); the load jobs of the given are free.
+    bytes_billed: int = 0
 
     @property
     def passed(self) -> bool:
@@ -43,17 +45,23 @@ class RunReport:
     def failed_reports(self) -> tuple[ScenarioReport, ...]:
         return tuple(report for report in self.scenario_reports if not report.passed)
 
+    @property
+    def bytes_billed(self) -> int:
+        return sum(report.bytes_billed for report in self.scenario_reports)
+
 
 def format_run_report(run_report: RunReport) -> str:
     lines = [
         *(
-            f"{'PASSED' if r.passed else 'FAILED'}  {r.scenario_id}  ({r.duration_seconds:.1f}s)"
+            f"{'PASSED' if r.passed else 'FAILED'}  {r.scenario_id}  "
+            f"({r.duration_seconds:.1f}s, {format_bytes(r.bytes_billed)} billed)"
             for r in run_report.scenario_reports
         ),
         *(line for report in run_report.failed_reports for line in format_scenario_failure(report)),
         "",
         f"{len(run_report.scenario_reports) - len(run_report.failed_reports)} passed, "
-        f"{len(run_report.failed_reports)} failed (run {run_report.run_id})",
+        f"{len(run_report.failed_reports)} failed, {format_bytes(run_report.bytes_billed)} billed "
+        f"(run {run_report.run_id})",
     ]
     return "\n".join(lines)
 
@@ -73,6 +81,13 @@ def format_scenario_failure(report: ScenarioReport) -> list[str]:
             if not check.passed
         ),
     ]
+
+
+def format_bytes(size: int) -> str:
+    """Binary units, as the BigQuery pricing (per TiB): 10485760 -> '10.0 MiB'."""
+    units = ("B", "KiB", "MiB", "GiB", "TiB", "PiB")
+    exponent = next((i for i in reversed(range(len(units))) if size >= 1024**i), 0)
+    return f"{size} B" if exponent == 0 else f"{size / 1024**exponent:.1f} {units[exponent]}"
 
 
 def _indent(text: str) -> str:
