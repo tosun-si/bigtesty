@@ -77,7 +77,7 @@ def test_given_failing_query_when_run_tests_then_only_its_scenario_fails_with_th
 
     # THEN
     assert [(r.scenario_id, r.passed, r.error) for r in run_report.scenario_reports] == [
-        ("monitoring/jobs.bigtesty.yaml::nominal", False, "RuntimeError: boom"),
+        ("monitoring/jobs.bigtesty.yaml::nominal", False, "when: RuntimeError: boom"),
         ("monitoring/jobs.bigtesty.yaml::other", True, None),
     ]
 

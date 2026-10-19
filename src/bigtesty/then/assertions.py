@@ -6,11 +6,10 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-from deepdiff import DeepDiff
-
 from bigtesty.exceptions import SpecError
 from bigtesty.plan import AssertionFunctionPlan, Row, ThenPlan
 from bigtesty.report import CheckResult
+from bigtesty.then.row_diff import diff_rows, format_row_diff
 
 AssertionFunction = Callable[[list[Row], list[Row]], Any]
 
@@ -47,21 +46,12 @@ def check_rows(then: ThenPlan, actual: list[Row], expected: list[Row]) -> CheckR
             for row in rows
         ]
 
-    diff = DeepDiff(
-        prepare(expected),
-        prepare(actual),
-        ignore_order=then.ignore_order,
-        math_epsilon=then.float_tolerance,
-    )
+    diff = diff_rows(prepare(expected), prepare(actual), then.ignore_order, then.float_tolerance)
 
     return CheckResult(
         check="rows",
         passed=not diff,
-        message=(
-            f"expected {len(expected)} rows, got {len(actual)}, diff from expected to actual:\n{diff.pretty()}"
-            if diff
-            else ""
-        ),
+        message=format_row_diff(diff, len(expected), len(actual)) if diff else "",
     )
 
 

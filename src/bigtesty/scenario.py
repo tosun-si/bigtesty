@@ -6,6 +6,7 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from google.cloud import bigquery
 from google.cloud.bigquery import Client
@@ -15,6 +16,7 @@ from bigtesty.plan import GivenPlan, Row, RunPlan, ScenarioPlan, ThenPlan
 from bigtesty.report import CheckResult, ScenarioReport, ThenReport
 from bigtesty.spec.files import write_data_file
 from bigtesty.sql_rewrite import rewrite_datasets
+from bigtesty.step_error import StepError, format_step_error
 from bigtesty.then.assertions import check_then
 from bigtesty.then.normalization import normalize_rows
 from bigtesty.then.snapshot import snapshot_rows
@@ -40,21 +42,22 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
     # Kept outside of the try: the bytes billed before an error are reported too.
     bytes_billed: list[int] = []
 
-    def query(sql: str) -> bigquery.table.RowIterator:
-        rows, job_bytes_billed = _run_query(context, scenario, sql)
+    def query(sql: str, step: str, source: Path | None = None) -> bigquery.table.RowIterator:
+        rows, job_bytes_billed = _run_step_query(context, scenario, sql, step, source)
         bytes_billed.append(job_bytes_billed)
         return rows
 
     try:
         for dataset in context.plan.datasets:
-            for ddl_statement in dataset.ddl_statements:
-                query(ddl_statement)
+            ddl_files: tuple[Path | None, ...] = dataset.ddl_files or (None,) * len(dataset.ddl_statements)
+            for ddl_statement, ddl_file in zip(dataset.ddl_statements, ddl_files, strict=True):
+                query(ddl_statement, f"ddl of {dataset.dataset_id}", ddl_file)
 
         for given in scenario.given:
             _load_given(context, scenario, given)
 
         if scenario.when_sql is not None:
-            query(scenario.when_sql)
+            query(scenario.when_sql, "when", scenario.when_file)
 
         then_reports = tuple(_run_then(query, then, context.plan.update_snapshots) for then in scenario.then)
         report = ScenarioReport(
@@ -65,12 +68,21 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
             scenario.scenario_id,
             (),
             time.perf_counter() - start,
-            error=f"{type(e).__name__}: {e}",
+            error=format_step_error(e) if isinstance(e, StepError) else f"{type(e).__name__}: {e}",
             bytes_billed=sum(bytes_billed),
         )
 
-    logger.info("%s %s", "PASSED" if report.passed else "FAILED", scenario.scenario_id)
+    logger.debug("%s %s", "PASSED" if report.passed else "FAILED", scenario.scenario_id)
     return report
+
+
+def _run_step_query(
+    context: "RunContext", scenario: ScenarioPlan, sql: str, step: str, source: Path | None
+) -> tuple[bigquery.table.RowIterator, int]:
+    try:
+        return _run_query(context, scenario, sql)
+    except Exception as e:
+        raise StepError(step, e, scenario_sql(context, scenario, sql), source) from e
 
 
 def scenario_sql(context: RunContext, scenario: ScenarioPlan, sql: str) -> str:
@@ -112,13 +124,25 @@ def _load_given(context: RunContext, scenario: ScenarioPlan, given: GivenPlan) -
     )
     job_config = bigquery.LoadJobConfig(write_disposition=bigquery.WriteDisposition.WRITE_APPEND, labels=context.labels)
 
-    context.client.load_table_from_json(list(given.rows), destination, job_config=job_config).result()
+    step = f"given {given.dataset_id}.{given.table_id}"
+    try:
+        job = context.client.load_table_from_json(list(given.rows), destination, job_config=job_config)
+    except Exception as e:
+        raise StepError(step, e) from e
+
+    try:
+        job.result()
+    except Exception as e:
+        # The rejected rows are in the errors of the job, the error itself only says that there are errors.
+        messages = [error["message"] for error in (getattr(job, "errors", None) or []) if error.get("message")]
+        details = [message for message in messages if "too many errors" not in message] or messages
+        raise StepError(step, e, details=details, job_id=getattr(job, "job_id", None)) from e
 
 
 def _run_then(
-    query: Callable[[str], bigquery.table.RowIterator], then: ThenPlan, update_snapshots: bool = False
+    query: Callable[[str, str, Path | None], bigquery.table.RowIterator], then: ThenPlan, update_snapshots: bool = False
 ) -> ThenReport:
-    rows = query(then.query)
+    rows = query(then.query, f"then {then.name}", then.query_file)
     schema = list(rows.schema or [])
 
     actual = normalize_rows([dict(row.items()) for row in rows], schema)

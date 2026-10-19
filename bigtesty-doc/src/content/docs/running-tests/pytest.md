@@ -33,8 +33,8 @@ A failed scenario shows the diff of each failed assertion, like the CLI:
 ```text
 __________ bigtesty: merge_updates_existing_and_inserts_new_features ___________
 summary_is_upserted / rows:
-    expected 2 rows, got 2, diff from expected to actual:
-    Value of root[0]['failuresCount'] changed from 8 to 7.
+    expected 2 rows, got 2: 1 changed
+      changed     {featureName: "featurePSG", lastFailureDate: "2026-01-11T10:00:00Z"}  failuresCount: 8 → 7
 ```
 
 ## Options

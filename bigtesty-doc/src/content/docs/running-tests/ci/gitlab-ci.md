@@ -40,3 +40,18 @@ tests:
 - The authentication uses the Application Default Credentials of the runner: its service account when it runs on
   GCP, or [Workload Identity Federation with GitLab](https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines#gitlab-saas)
   otherwise, without a service account key.
+
+## Test report in the merge requests
+
+With a JUnit XML report, GitLab shows the failed scenarios and their diff in the merge request:
+
+```yaml title=".gitlab-ci.yml"
+tests:
+  script:
+    - uv sync --frozen
+    - uv run pytest --junitxml=report.xml   # or: uv run bigtesty test --junit-xml report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+```

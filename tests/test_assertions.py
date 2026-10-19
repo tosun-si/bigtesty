@@ -48,10 +48,14 @@ def test_given_rows_when_check_then_rows_check_follows_the_options(then_options,
 
 def test_given_rows_mismatch_when_check_then_message_shows_the_diff():
     # WHEN
-    [result] = check_then(_then(), [{"failuresCount": 7}], [{"failuresCount": 8}])
+    [result] = check_then(
+        _then(), [{"featureName": "f1", "failuresCount": 7}], [{"featureName": "f1", "failuresCount": 8}]
+    )
 
     # THEN
-    assert "root[0]['failuresCount'] changed from 8 to 7" in result.message
+    assert (
+        result.message == 'expected 1 rows, got 1: 1 changed\n  changed     {featureName: "f1"}  failuresCount: 8 → 7'
+    )
 
 
 def test_given_row_count_and_expected_rows_when_check_then_both_checks_are_reported():
