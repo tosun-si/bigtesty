@@ -90,6 +90,8 @@ jobs:
         /tmp/smoke/bin/bigtesty --version
         /tmp/smoke/bin/bigtesty test --help
         /tmp/smoke/bin/bigtesty infra create --help
+        # The production code of the example 06 renders its SQL with Jinja, a dependency of the project, not of BigTesty.
+        uv pip install --python /tmp/smoke jinja2
         for config in examples/*/bigtesty.yaml; do /tmp/smoke/bin/bigtesty validate --config "$config"; done
         uv pip install --python /tmp/smoke pytest
         /tmp/smoke/bin/pytest --help | grep -- --bigtesty-project
