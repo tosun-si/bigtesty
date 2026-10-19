@@ -7,9 +7,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from google.cloud.bigquery import SchemaField
+from google.cloud.bigquery import ArrayQueryParameter, ScalarQueryParameter, SchemaField
 
 Row = dict[str, Any]
+QueryParameter = ScalarQueryParameter | ArrayQueryParameter
 
 
 @dataclass(frozen=True)
@@ -64,6 +65,8 @@ class ThenPlan:
     expected_file: Path | None = None
     # The file of the query, shown in the errors.
     query_file: Path | None = None
+    # The BigQuery query parameters of the query: the scenario ones and the then ones.
+    parameters: tuple[QueryParameter, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -76,6 +79,8 @@ class ScenarioPlan:
     then: tuple[ThenPlan, ...]
     # The file of the when SQL, shown in the errors.
     when_file: Path | None = None
+    # The BigQuery query parameters of the when SQL: the scenario ones and the when ones.
+    when_parameters: tuple[QueryParameter, ...] = ()
 
 
 @dataclass(frozen=True)

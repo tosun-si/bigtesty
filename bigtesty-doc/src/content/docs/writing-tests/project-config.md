@@ -55,6 +55,8 @@ labels: { team: data, cost_center: cc-42 }
 | `max_workers`            | `8`      | Number of scenarios and BigQuery jobs executed in parallel.                          |
 | `labels`                 | `{}`     | Labels of the datasets and the query jobs, e.g. for the billing per team.            |
 | `kms_key_name`           |          | Cloud KMS key encrypting the datasets and tables (CMEK), see [CMEK](#cmek).          |
+| `sql_renderer`           |          | Template engine of the SQL, see [Templated SQL](#templated-sql).                     |
+| `vars`                   | `{}`     | Default vars of the `sql_renderer`, overridden by the `vars` of the scenarios.       |
 
 ## Datasets
 
@@ -111,3 +113,34 @@ gcloud kms keys add-iam-policy-binding my-key --keyring=my-ring --location=europ
 ```
 
 The tables created by the DDL files take the key of their dataset.
+
+## Templated SQL
+
+The `sql_renderer` is a Python function of the project, called by BigTesty to render the SQL with the template
+engine of the team before the rewrite of the datasets:
+
+```yaml
+sql_renderer:
+  module: tests/render.py      # relative to the config file
+  function: render
+vars:
+  env: test
+```
+
+```python
+# tests/render.py
+from my_pipeline.sql import render_sql   # the rendering code of the production
+
+
+def render(sql: str, vars: dict) -> str:
+    return render_sql(sql, **vars)
+```
+
+- The function receives the SQL and the vars (the ones of the config, overridden by the ones of the scenario), and
+  returns the rendered SQL. It also receives `path=`, the SQL file (`None` for an inline SQL), when it accepts it:
+  e.g. for the `{% include %}` of a Jinja environment.
+- It renders the DDL files (with the vars of the config), the `when` and the `then` queries, not the `table`
+  shortcut.
+- Calling the rendering code of the production tests the SQL exactly as it is rendered in production: a broken
+  macro fails the tests too.
+- `vars` without a `sql_renderer` are an error.

@@ -46,6 +46,9 @@ rerun: bigtesty test -k "monitoring/failures.bigtesty.yaml::wrong_value_and_miss
 | `the dataset X is not declared in the project config` | declare it in `bigtesty.yaml`, with its tables |
 | `Invalid file ...` | the Pydantic error names the field; `bigtesty validate` checks everything |
 | `reserved label keys` | `bigtesty` and `bigtesty_run_id` are set by BigTesty |
+| `... the SQL renderer failed: KeyError: 'ds'` | a var of the template is missing: add it to the `vars` of the scenario or the config |
+| `vars are set but the config has no sql_renderer` | declare the `sql_renderer` of the team in `bigtesty.yaml` |
+| `The type of the parameter ... can't be inferred` | null, empty array or other types: `{type: DATE, value: ...}` |
 | `GCP authentication error` | `gcloud auth application-default login`, or the CI auth step |
 
 ## BigQuery errors in a scenario
@@ -60,6 +63,9 @@ For a `given`, it shows the rows rejected by the load job.
   `project_aliases`, or declare the dataset. Check the rewritten SQL with `-v`.
 - A column reference rewritten as a table: a table aliased with the name of a configured dataset
   (`FROM x AS monitoring`); rename the alias.
+- `Query parameter 'x' not found`: add it to the `parameters` of the scenario, the `when` or the `then`.
+- A template left in the SQL (`Syntax error: Unexpected "{"`): the `sql_renderer` is missing or doesn't render this
+  syntax; `bigtesty test -v` shows the executed SQL.
 - `Query exceeded limit for bytes billed`: raise `max_bytes_billed`, or reduce the scanned data (partition filter).
 - Location mismatch: all the datasets of a query must be in the same location; set `location` per dataset if needed.
 - CMEK: the key location must match the datasets (`europe` for `EU`, `us` for `US`, otherwise the same region) and

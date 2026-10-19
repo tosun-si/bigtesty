@@ -76,6 +76,7 @@ Optional fields, only when needed:
 - `kms_key_name`: CMEK, in the config or per dataset. The key must be in the location of the datasets (`europe`
   for `EU`, `us` for `US`) and the BigQuery encryption service account
   (`bq show --encryption_service_account`) needs `roles/cloudkms.cryptoKeyEncrypterDecrypter` on it.
+- `sql_renderer` + `vars`: the template engine of the team, for templated production SQL (writing-tests skill).
 - `table_expiration_hours` (6): safety net if a run is killed. `max_workers` (8): parallel scenarios and jobs.
 - The keys `bigtesty` and `bigtesty_run_id` of `labels` are reserved.
 

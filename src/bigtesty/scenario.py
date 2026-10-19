@@ -12,7 +12,7 @@ from google.cloud import bigquery
 from google.cloud.bigquery import Client
 
 from bigtesty.infra.ephemeral_infra import BIGTESTY_RUN_ID_LABEL_KEY, unique_dataset_id
-from bigtesty.plan import GivenPlan, Row, RunPlan, ScenarioPlan, ThenPlan
+from bigtesty.plan import GivenPlan, QueryParameter, Row, RunPlan, ScenarioPlan, ThenPlan
 from bigtesty.report import CheckResult, ScenarioReport, ThenReport
 from bigtesty.spec.files import write_data_file
 from bigtesty.sql_rewrite import rewrite_datasets
@@ -42,8 +42,10 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
     # Kept outside of the try: the bytes billed before an error are reported too.
     bytes_billed: list[int] = []
 
-    def query(sql: str, step: str, source: Path | None = None) -> bigquery.table.RowIterator:
-        rows, job_bytes_billed = _run_step_query(context, scenario, sql, step, source)
+    def query(
+        sql: str, step: str, source: Path | None = None, parameters: tuple[QueryParameter, ...] = ()
+    ) -> bigquery.table.RowIterator:
+        rows, job_bytes_billed = _run_step_query(context, scenario, sql, step, source, parameters)
         bytes_billed.append(job_bytes_billed)
         return rows
 
@@ -57,7 +59,7 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
             _load_given(context, scenario, given)
 
         if scenario.when_sql is not None:
-            query(scenario.when_sql, "when", scenario.when_file)
+            query(scenario.when_sql, "when", scenario.when_file, scenario.when_parameters)
 
         then_reports = tuple(_run_then(query, then, context.plan.update_snapshots) for then in scenario.then)
         report = ScenarioReport(
@@ -77,10 +79,15 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
 
 
 def _run_step_query(
-    context: "RunContext", scenario: ScenarioPlan, sql: str, step: str, source: Path | None
+    context: "RunContext",
+    scenario: ScenarioPlan,
+    sql: str,
+    step: str,
+    source: Path | None,
+    parameters: tuple[QueryParameter, ...],
 ) -> tuple[bigquery.table.RowIterator, int]:
     try:
-        return _run_query(context, scenario, sql)
+        return _run_query(context, scenario, sql, parameters)
     except Exception as e:
         raise StepError(step, e, scenario_sql(context, scenario, sql), source) from e
 
@@ -95,15 +102,24 @@ def scenario_sql(context: RunContext, scenario: ScenarioPlan, sql: str) -> str:
     )
 
 
-def _run_query(context: RunContext, scenario: ScenarioPlan, sql: str) -> tuple[bigquery.table.RowIterator, int]:
+def _run_query(
+    context: RunContext, scenario: ScenarioPlan, sql: str, parameters: tuple[QueryParameter, ...] = ()
+) -> tuple[bigquery.table.RowIterator, int]:
     """Returns the rows and the bytes billed of the query job (for a script, the sum of its child jobs)."""
     query = scenario_sql(context, scenario, sql)
-    logger.debug("[%s] Executing:\n%s", scenario.scenario_id, query)
+    logger.debug(
+        "[%s] Executing%s:\n%s",
+        scenario.scenario_id,
+        f" with {', '.join(f'@{p.name}' for p in parameters)}" if parameters else "",
+        query,
+    )
 
     # Not passed when unset: QueryJobConfig(maximum_bytes_billed=None) sends the string "None", rejected by BigQuery.
     max_bytes_billed = context.plan.max_bytes_billed
     job_config = bigquery.QueryJobConfig(
-        labels=context.labels, **({"maximum_bytes_billed": max_bytes_billed} if max_bytes_billed else {})
+        labels=context.labels,
+        query_parameters=list(parameters),
+        **({"maximum_bytes_billed": max_bytes_billed} if max_bytes_billed else {}),
     )
     job = context.client.query(query, job_config=job_config)
     rows = job.result()
@@ -140,9 +156,11 @@ def _load_given(context: RunContext, scenario: ScenarioPlan, given: GivenPlan) -
 
 
 def _run_then(
-    query: Callable[[str, str, Path | None], bigquery.table.RowIterator], then: ThenPlan, update_snapshots: bool = False
+    query: Callable[[str, str, Path | None, tuple[QueryParameter, ...]], bigquery.table.RowIterator],
+    then: ThenPlan,
+    update_snapshots: bool = False,
 ) -> ThenReport:
-    rows = query(then.query, f"then {then.name}", then.query_file)
+    rows = query(then.query, f"then {then.name}", then.query_file, then.parameters)
     schema = list(rows.schema or [])
 
     actual = normalize_rows([dict(row.items()) for row in rows], schema)

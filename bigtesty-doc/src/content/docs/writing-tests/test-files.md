@@ -53,7 +53,8 @@ and a row that doesn't match the schema fails the scenario.
 ## When
 
 The SQL under test, optional: `sql` (inline) or `sql_file`. It is executed as a BigQuery script: queries, DML,
-`MERGE`, `CALL` of a procedure, `DECLARE` / `BEGIN...END` blocks, multi-statements...
+`MERGE`, `CALL` of a procedure, `DECLARE` / `BEGIN...END` blocks, multi-statements... The SQL can be the
+[production SQL](#production-sql), with query parameters and templates.
 
 ## Then
 
@@ -131,6 +132,71 @@ then:
       - module: assertion_functions/failures_assertions.py
         function: check_failures_concern_feature_psg
 ```
+
+## Production SQL
+
+The production SQL is tested as is, without a copy in the tests.
+
+### SQL files outside of the tests
+
+`sql_file` and `query_file` are relative to the test file, and can point to the production SQL anywhere in the
+repository:
+
+```yaml
+when:
+  sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+```
+
+The references to the configured datasets are rewritten, and those of the production project too when it is listed
+in the `project_aliases` of the config.
+
+### Query parameters
+
+The [query parameters](https://cloud.google.com/bigquery/docs/parameterized-queries) of the SQL (`@name`) are
+passed as BigQuery query parameters, not replaced in the text: `parameters` on the scenario (for the `when` and all
+the `then` queries), on the `when` and on each `then`, which override the scenario ones.
+
+```yaml
+scenarios:
+  - name: daily_failures
+    parameters:
+      feature_names: [featurePSG, featureOM]       # ARRAY<STRING>
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+      parameters:
+        min_failures: 2                            # INT64
+    then:
+      - query: SELECT * FROM monitoring.daily_failures WHERE day >= @since
+        parameters:
+          since: { type: DATE, value: "2026-01-01" }
+        row_count: 2
+```
+
+The type is inferred from the value: `STRING`, `INT64`, `FLOAT64`, `BOOL`, or an `ARRAY` of them. The other types
+(`DATE`, `DATETIME`, `TIMESTAMP`, `NUMERIC`, `BIGNUMERIC`, `TIME`, `BYTES`, `JSON`) and the empty or null values
+are given with `{type: ..., value: ...}`. The DDL files don't take parameters.
+
+### Templated SQL
+
+Each team has its template engine (Jinja, Airflow macros, an in-house one...): BigTesty doesn't render the
+templates itself, it calls the engine of the team, declared as the
+[`sql_renderer`](/bigtesty/writing-tests/project-config/#templated-sql) of the config, with the `vars` of the scenario:
+
+```yaml
+scenarios:
+  - name: daily_failures
+    vars: { ds: "2026-01-10" }                     # added to the vars of the config
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql   # WHERE day = '{{ ds }}'
+```
+
+The SQL of the DDL files (with the vars of the config), of the `when` and of the `then` queries is rendered first,
+then its datasets are rewritten: a dataset given by a var (`{{ dataset }}.job_failure`) is rewritten when the var is
+a configured dataset. `bigtesty test -v` shows the rendered and rewritten SQL, `bigtesty validate` renders all the
+SQL without calling BigQuery.
+
+The [`06-production-sql`](https://github.com/tosun-si/bigtesty/tree/main/examples/06-production-sql) example tests
+a templated production job with query parameters.
 
 ## IDE validation
 

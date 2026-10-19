@@ -21,6 +21,13 @@ KmsKeyName = Annotated[
 ]
 # Set by BigTesty on the datasets and the jobs of a run.
 RESERVED_LABEL_KEYS = ("bigtesty", "bigtesty_run_id")
+ParameterName = Annotated[str, StringConstraints(pattern=r"^[A-Za-z_][A-Za-z0-9_]*$")]
+Parameters = dict[ParameterName, Any]
+Vars = dict[str, Any]
+PARAMETERS_DESCRIPTION = (
+    "BigQuery query parameters (@name in the SQL): a value whose type is inferred (string, integer, float, boolean, "
+    "array), or {type: DATE, value: '2026-01-10'}."
+)
 
 
 class SpecModel(BaseModel):
@@ -90,6 +97,14 @@ class DatasetSpec(SpecModel):
         return self
 
 
+class SqlRendererSpec(SpecModel):
+    module: str = Field(description="Python file containing the function, relative to the config file.")
+    function: str = Field(
+        description="Function called with (sql, vars), and path= (the SQL file) when it accepts it, returning the "
+        "rendered SQL: the template engine of the team."
+    )
+
+
 class ProjectConfig(SpecModel):
     project: str | None = Field(None, description="GCP project ID, can be overridden by the CLI or GOOGLE_PROJECT.")
     location: str | None = Field(None, description="Default BigQuery location of the datasets, e.g. EU.")
@@ -110,6 +125,10 @@ class ProjectConfig(SpecModel):
         "projects/<project>/locations/<location>/keyRings/<key ring>/cryptoKeys/<key>.",
     )
     labels: Labels = Field({}, description="Labels of all the datasets and of the BigQuery jobs (e.g. cost center).")
+    sql_renderer: SqlRendererSpec | None = Field(
+        None, description="Renders the templated SQL (DDL, when, then) before the rewrite of the datasets."
+    )
+    vars: Vars = Field({}, description="Default variables of the SQL renderer, overridden by the scenario vars.")
 
     @model_validator(mode="after")
     def _check_labels(self) -> Self:
@@ -141,6 +160,7 @@ class GivenSpec(SpecModel):
 class WhenSpec(SpecModel):
     sql: str | None = Field(None, description="SQL executed as a script: DML, MERGE, CALL, multi-statements...")
     sql_file: str | None = None
+    parameters: Parameters = Field({}, description=PARAMETERS_DESCRIPTION + " Added to the scenario parameters.")
 
     @model_validator(mode="after")
     def _check_sql(self) -> Self:
@@ -168,6 +188,7 @@ class ThenSpec(SpecModel):
         "all", description="expected_only compares only the columns present in the expected rows."
     )
     float_tolerance: float | None = Field(None, ge=0)
+    parameters: Parameters = Field({}, description=PARAMETERS_DESCRIPTION + " Added to the scenario parameters.")
 
     @model_validator(mode="after")
     def _check_then(self) -> Self:
@@ -185,6 +206,8 @@ class ScenarioSpec(SpecModel):
     given: list[GivenSpec] = []
     when: WhenSpec | None = None
     then: list[ThenSpec] = Field(min_length=1)
+    parameters: Parameters = Field({}, description=PARAMETERS_DESCRIPTION + " For the when and the then queries.")
+    vars: Vars = Field({}, description="Variables of the SQL renderer of the config, added to the config vars.")
 
 
 class SpecFile(SpecModel):

@@ -28,6 +28,7 @@ from bigtesty.infra.ephemeral_infra import (
     generate_run_id,
     unique_dataset_id,
 )
+from bigtesty.parameters import to_query_parameters
 from bigtesty.plan import GivenPlan, RunPlan, ScenarioPlan
 from bigtesty.runner import should_cleanup
 from bigtesty.scenario import RunContext, _load_given, _run_query, scenario_sql
@@ -118,9 +119,12 @@ class BigTestyInfra:
 
         _load_given(self._context, _INFRA_SCENARIO, GivenPlan(dataset, table_name, tuple(data)))
 
-    def query(self, sql: str) -> list[Row]:
-        """Runs a query or a script, rewritten to the datasets of the infra, and returns its rows."""
-        rows, bytes_billed = _run_query(self._context, _INFRA_SCENARIO, sql)
+    def query(self, sql: str, parameters: dict[str, Any] | None = None) -> list[Row]:
+        """
+        Runs a query or a script, rewritten to the datasets of the infra, and returns its rows. `parameters` are the
+        BigQuery query parameters (`@name`), as in the test files: `{"day": {"type": "DATE", "value": "2026-01-10"}}`.
+        """
+        rows, bytes_billed = _run_query(self._context, _INFRA_SCENARIO, sql, to_query_parameters(parameters or {}))
         self.bytes_billed += bytes_billed
         return [dict(row.items()) for row in rows]
 
