@@ -65,14 +65,15 @@ vars: { env: test }                                            # defaults, overr
 
 ```python
 # tests/render.py: call the production rendering code, so that the tests render the SQL like the production
-from my_pipeline.sql import render_sql
+from monitoring.templating import render_sql  # e.g. the Jinja environment of the production
 
 
 def render(sql: str, vars: dict) -> str:
     return render_sql(sql, **vars)
 ```
 
-The DDL, `when` and `then` SQL is rendered first, then rewritten. `bigtesty test -v` shows the result. Example:
+Never reimplement the template engine for the tests: find the function the production uses to render the SQL
+(Jinja environment, macros, filters) and call it. The DDL, `when` and `then` SQL is rendered first, then rewritten. `bigtesty test -v` shows the result. Example:
 https://github.com/tosun-si/bigtesty/tree/main/examples/06-production-sql.
 
 ## Assertions

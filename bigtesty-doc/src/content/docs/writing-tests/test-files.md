@@ -179,24 +179,99 @@ are given with `{type: ..., value: ...}`. The DDL files don't take parameters.
 ### Templated SQL
 
 Each team has its template engine (Jinja, Airflow macros, an in-house one...): BigTesty doesn't render the
-templates itself, it calls the engine of the team, declared as the
-[`sql_renderer`](/bigtesty/writing-tests/project-config/#templated-sql) of the config, with the `vars` of the scenario:
+templates itself, it calls **the rendering code of the production**, declared as the
+[`sql_renderer`](/bigtesty/writing-tests/project-config/#templated-sql) of the config. The tests then render the
+SQL exactly like the production: a broken macro or a missing var fails them too.
 
-```yaml
-scenarios:
-  - name: daily_failures
-    vars: { ds: "2026-01-10" }                     # added to the vars of the config
-    when:
-      sql_file: ../../src/monitoring/sql/build_daily_failures.sql   # WHERE day = '{{ ds }}'
+A complete example, from the
+[`06-production-sql`](https://github.com/tosun-si/bigtesty/tree/main/examples/06-production-sql) example. The
+production SQL is a Jinja template, with a shared macro and query parameters:
+
+```sql title="src/monitoring/sql/build_daily_failures.sql"
+{% from "macros.sql" import partition_filter %}
+DELETE FROM `my-prod-project.monitoring.daily_failures` WHERE day = '{{ ds }}';
+
+INSERT INTO `my-prod-project.monitoring.daily_failures` (day, featureName, failuresCount, env)
+SELECT DATE(dwhCreationDate) AS day, featureName, COUNT(*) AS failuresCount, '{{ env }}' AS env
+FROM `my-prod-project.monitoring.job_failure`
+WHERE {{ partition_filter('dwhCreationDate', ds) }}
+  AND featureName IN UNNEST(@feature_names)
+GROUP BY day, featureName
+HAVING COUNT(*) >= @min_failures;
 ```
 
-The SQL of the DDL files (with the vars of the config), of the `when` and of the `then` queries is rendered first,
-then its datasets are rewritten: a dataset given by a var (`{{ dataset }}.job_failure`) is rewritten when the var is
-a configured dataset. `bigtesty test -v` shows the rendered and rewritten SQL, `bigtesty validate` renders all the
-SQL without calling BigQuery.
+The rendering code of the production, used by the production job before running the SQL:
 
-The [`06-production-sql`](https://github.com/tosun-si/bigtesty/tree/main/examples/06-production-sql) example tests
-a templated production job with query parameters.
+```python title="src/monitoring/templating.py"
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+SQL_DIR = Path(__file__).parent / "sql"
+_environment = Environment(loader=FileSystemLoader(SQL_DIR), undefined=StrictUndefined, autoescape=False)
+
+
+def render_sql(sql: str, **variables) -> str:
+    return _environment.from_string(sql).render(**variables)
+```
+
+```python title="src/monitoring/daily_failures_job.py"
+def build_daily_failures(client, ds, feature_names, min_failures):
+    sql = render_sql_file("build_daily_failures.sql", ds=ds, env="prod")
+    job_config = bigquery.QueryJobConfig(query_parameters=[
+        bigquery.ArrayQueryParameter("feature_names", "STRING", feature_names),
+        bigquery.ScalarQueryParameter("min_failures", "INT64", min_failures),
+    ])
+    client.query(sql, job_config=job_config).result()
+```
+
+The `sql_renderer` of the tests calls the same function:
+
+```python title="tests/render.py"
+from monitoring.templating import render_sql
+
+
+def render(sql: str, vars: dict) -> str:
+    return render_sql(sql, **vars)
+```
+
+```yaml title="bigtesty.yaml"
+project_aliases: [my-prod-project]       # the production project of the SQL, rewritten too
+sql_renderer: { module: tests/render.py, function: render }
+vars: { env: test }                      # default vars, overridden by the scenario vars
+```
+
+The test file references the production SQL, with the vars of the template and the query parameters of the job:
+
+```yaml title="tests/monitoring/daily_failures.bigtesty.yaml"
+scenarios:
+  - name: daily_failures_of_the_selected_features
+    vars: { ds: "2026-01-10" }
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: featurePSG, jobName: job1, dwhCreationDate: "2026-01-10 08:00:00" }
+          - { featureName: featurePSG, jobName: job2, dwhCreationDate: "2026-01-10 09:00:00" }
+          - { featureName: featureOM, jobName: job3, dwhCreationDate: "2026-01-10 10:00:00" }
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+      parameters:
+        feature_names: [featurePSG, featureOM]
+        min_failures: 2
+    then:
+      - table: monitoring.daily_failures
+        expected:
+          - { day: "2026-01-10", featureName: featurePSG, failuresCount: 2, env: test }
+```
+
+For each scenario, BigTesty renders the SQL with the `sql_renderer` and the `vars`, rewrites the datasets
+(`my-prod-project.monitoring.job_failure` → the scenario dataset), then runs it with the `parameters`:
+
+- The SQL of the DDL files (with the vars of the config), of the `when` and of the `then` queries is rendered; a
+  dataset given by a var (`{{ dataset }}.job_failure`) is rewritten when the var is a configured dataset.
+- `bigtesty test -v` shows the rendered and rewritten SQL with its parameters.
+- `bigtesty validate` renders all the SQL without calling BigQuery: a missing var fails with
+  `... when (src/monitoring/sql/build_daily_failures.sql): the SQL renderer failed: UndefinedError: 'ds' is undefined`.
 
 ## IDE validation
 

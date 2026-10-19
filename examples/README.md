@@ -10,7 +10,7 @@ README with the commands.
 | [`03-merge-with-ddl`](03-merge-with-ddl/) | A `when` step running a `MERGE` script, a view created with a DDL file, several `then` assertions on a table and a query |
 | [`04-uv-project`](04-uv-project/) | A project with BigTesty as a uv dev dependency from PyPI, tests run with pytest, CI with GitHub Actions, GitLab CI and Cloud Build |
 | [`05-python-tests`](05-python-tests/) | Python code writing to BigQuery tested with pytest and unittest: one infra created and deleted once for several tests |
-| [`06-production-sql`](06-production-sql/) | The production SQL tested as is from `src/`: a template rendered by the engine of the team (`sql_renderer`, `vars`), BigQuery query parameters |
+| [`06-production-sql`](06-production-sql/) | The production SQL tested as is from `src/`: a Jinja template rendered by the rendering code of the production (`sql_renderer`, `vars`), BigQuery query parameters |
 
 They need Application Default Credentials and the `roles/bigquery.user` role on the test project:
 

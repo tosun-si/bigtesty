@@ -129,12 +129,15 @@ vars:
 
 ```python
 # tests/render.py
-from my_pipeline.sql import render_sql   # the rendering code of the production
+from monitoring.templating import render_sql   # the rendering code of the production (e.g. a Jinja environment)
 
 
 def render(sql: str, vars: dict) -> str:
     return render_sql(sql, **vars)
 ```
+
+The [Templated SQL](/bigtesty/writing-tests/test-files/#templated-sql) section of the test files shows a complete
+example: the production SQL, its Jinja rendering code, the renderer and the test file.
 
 - The function receives the SQL and the vars (the ones of the config, overridden by the ones of the scenario), and
   returns the rendered SQL. It also receives `path=`, the SQL file (`None` for an inline SQL), when it accepts it:
@@ -143,4 +146,5 @@ def render(sql: str, vars: dict) -> str:
   shortcut.
 - Calling the rendering code of the production tests the SQL exactly as it is rendered in production: a broken
   macro fails the tests too.
-- `vars` without a `sql_renderer` are an error.
+- `vars` without a `sql_renderer` are an error. A rendering error (e.g. a missing var with the `StrictUndefined` of
+  Jinja) names the scenario, the step and the SQL file, and is also reported by `bigtesty validate`.
