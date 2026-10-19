@@ -12,9 +12,9 @@ service, dbt...
 from bigtesty.testing import BigTestyInfra
 
 with BigTestyInfra.from_config("bigtesty.yaml") as infra:
-    infra.load("monitoring.job_failure", [{"featureName": "featurePSG", "jobName": "job1"}])   # given
-    build_failures_summary(infra.client, infra.dataset_id("monitoring"))                      # when
-    rows = infra.query("SELECT * FROM monitoring.job_failure_summary")                        # then
+    infra.load("monitoring.job_failure", [{"featureName": "featurePSG", "jobName": "job1"}])  # given
+    build_failures_summary(infra.client, infra.dataset_id("monitoring"))  # when
+    rows = infra.query("SELECT * FROM monitoring.job_failure_summary")  # then
 ```
 
 ## Test files or Python tests
@@ -83,7 +83,7 @@ import pytest
 from bigtesty.testing import BigTestyInfra
 
 
-@pytest.fixture(scope="class")   # or "module", "session", "function"
+@pytest.fixture(scope="class")  # or "module", "session", "function"
 def infra():
     with BigTestyInfra.from_config(Path(__file__).parent / "bigtesty.yaml") as infra:
         infra.load("monitoring.job_failure", rows)
@@ -95,8 +95,7 @@ class TestFailuresSummary:
     def test_one_row_per_feature(self, infra):
         assert infra.query("SELECT featureName FROM monitoring.job_failure_summary ORDER BY 1") == [...]
 
-    def test_total_matches_the_failures(self, infra):
-        ...
+    def test_total_matches_the_failures(self, infra): ...
 ```
 
 The plugin also provides a `bigtesty_infra` fixture: one infra for the whole pytest session, configured with the

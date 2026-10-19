@@ -49,6 +49,32 @@
           },
           "title": "Ddl Files",
           "type": "array"
+        },
+        "kms_key_name": {
+          "anyOf": [
+            {
+              "pattern": "^projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cloud KMS key (CMEK) of the dataset and its tables, the project config one if not set.",
+          "title": "Kms Key Name"
+        },
+        "labels": {
+          "default": {},
+          "description": "Labels of the dataset, merged with the labels of the project config.",
+          "patternProperties": {
+            "^[a-z][a-z0-9_-]{0,62}$": {
+              "pattern": "^[a-z0-9_-]{0,63}$",
+              "type": "string"
+            }
+          },
+          "title": "Labels",
+          "type": "object"
         }
       },
       "required": [
@@ -260,6 +286,32 @@
       "exclusiveMinimum": 0,
       "title": "Max Workers",
       "type": "integer"
+    },
+    "kms_key_name": {
+      "anyOf": [
+        {
+          "pattern": "^projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Default Cloud KMS key (CMEK) of the datasets and tables, projects/<project>/locations/<location>/keyRings/<key ring>/cryptoKeys/<key>.",
+      "title": "Kms Key Name"
+    },
+    "labels": {
+      "default": {},
+      "description": "Labels of all the datasets and of the BigQuery jobs (e.g. cost center).",
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]{0,62}$": {
+          "pattern": "^[a-z0-9_-]{0,63}$",
+          "type": "string"
+        }
+      },
+      "title": "Labels",
+      "type": "object"
     }
   },
   "required": [

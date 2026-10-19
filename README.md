@@ -183,6 +183,10 @@ The datasets are destroyed at the end of the run (`cleanup: always` by default, 
 the result in BigQuery). As a safety net, their tables expire after `table_expiration_hours` (6 by default), and
 `bigtesty gc` deletes the datasets left by killed runs.
 
+The config can set `labels` on the datasets and the query jobs (cost per team in the billing export), and a
+`kms_key_name` to encrypt the datasets with a customer-managed key (CMEK), see the
+[project config](https://tosun-si.github.io/bigtesty/writing-tests/project-config/).
+
 ## CLI
 
 ```bash
@@ -247,11 +251,11 @@ import pytest
 from bigtesty.testing import BigTestyInfra
 
 
-@pytest.fixture(scope="class")   # the scope is the lifecycle of the infra
+@pytest.fixture(scope="class")  # the scope is the lifecycle of the infra
 def infra():
     with BigTestyInfra.from_config("bigtesty.yaml") as infra:
         infra.load("monitoring.job_failure", [{"featureName": "featurePSG", "jobName": "job1"}])
-        build_failures_summary(infra.client, infra.dataset_id("monitoring"))   # the code under test
+        build_failures_summary(infra.client, infra.dataset_id("monitoring"))  # the code under test
         yield infra
 
 

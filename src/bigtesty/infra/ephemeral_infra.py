@@ -58,14 +58,27 @@ def to_bigquery_dataset(
     dataset.description = ephemeral_dataset.dataset_plan.description
     # Safety net: if the process is killed before the cleanup, the tables expire by themselves.
     dataset.default_table_expiration_ms = table_expiration_hours * 60 * 60 * 1000
-    dataset.labels = {BIGTESTY_LABEL_KEY: "true", BIGTESTY_RUN_ID_LABEL_KEY: run_id}
+    dataset.labels = {
+        **dict(ephemeral_dataset.dataset_plan.labels),
+        BIGTESTY_LABEL_KEY: "true",
+        BIGTESTY_RUN_ID_LABEL_KEY: run_id,
+    }
+
+    if ephemeral_dataset.dataset_plan.kms_key_name:
+        # Default key of the tables created in the dataset by the DDL files and the scripts.
+        dataset.default_encryption_configuration = bigquery.EncryptionConfiguration(
+            kms_key_name=ephemeral_dataset.dataset_plan.kms_key_name
+        )
 
     return dataset
 
 
-def to_bigquery_table(full_dataset_id: str, table_plan: TablePlan) -> bigquery.Table:
+def to_bigquery_table(full_dataset_id: str, table_plan: TablePlan, kms_key_name: str | None = None) -> bigquery.Table:
     table = bigquery.Table(f"{full_dataset_id}.{table_plan.table_id}", schema=list(table_plan.schema))
     table.description = table_plan.description
+
+    if kms_key_name:
+        table.encryption_configuration = bigquery.EncryptionConfiguration(kms_key_name=kms_key_name)
 
     if table_plan.partition_type:
         table.time_partitioning = bigquery.TimePartitioning(
@@ -87,7 +100,11 @@ def create_ephemeral_infra(client: Client, plan: RunPlan, run_id: str) -> None:
         client.create_dataset(to_bigquery_dataset(ephemeral_dataset, run_id, plan.table_expiration_hours))
 
         for table_plan in ephemeral_dataset.dataset_plan.tables:
-            client.create_table(to_bigquery_table(ephemeral_dataset.full_dataset_id, table_plan))
+            client.create_table(
+                to_bigquery_table(
+                    ephemeral_dataset.full_dataset_id, table_plan, ephemeral_dataset.dataset_plan.kms_key_name
+                )
+            )
 
     with ThreadPoolExecutor(max_workers=plan.max_workers) as executor:
         list(executor.map(create_dataset_with_tables, ephemeral_datasets))

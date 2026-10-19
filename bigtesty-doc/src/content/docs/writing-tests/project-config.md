@@ -37,6 +37,7 @@ datasets:
 project_aliases: [my-prod-project]
 cleanup: always
 max_bytes_billed: 1000000000
+labels: { team: data, cost_center: cc-42 }
 ```
 
 ## Fields
@@ -52,6 +53,8 @@ max_bytes_billed: 1000000000
 | `max_bytes_billed`       |          | Maximum bytes billed of each query job.                                              |
 | `table_expiration_hours` | `6`      | Expiration of the tables, safety net if the process is killed before the cleanup.    |
 | `max_workers`            | `8`      | Number of scenarios and BigQuery jobs executed in parallel.                          |
+| `labels`                 | `{}`     | Labels of the datasets and the query jobs, e.g. for the billing per team.            |
+| `kms_key_name`           |          | Cloud KMS key encrypting the datasets and tables (CMEK), see [CMEK](#cmek).          |
 
 ## Datasets
 
@@ -60,6 +63,8 @@ max_bytes_billed: 1000000000
 | `id`          | Dataset ID, as written in the SQL.                                                                  |
 | `location`    | Location of the dataset, the `location` of the config if not set.                                   |
 | `description` | Description of the dataset.                                                                         |
+| `labels`      | Labels of the dataset, merged with the `labels` of the config.                                      |
+| `kms_key_name`| Cloud KMS key of the dataset, overrides the `kms_key_name` of the config.                           |
 | `tables`      | Tables created with a schema.                                                                       |
 | `ddl_files`   | Glob patterns of SQL files executed in each isolated dataset: `CREATE TABLE`, `VIEW`, `FUNCTION`, `PROCEDURE`... |
 
@@ -73,3 +78,36 @@ max_bytes_billed: 1000000000
 | `partitioning` | `type` (`HOUR`, `DAY`, `MONTH`, `YEAR`) and `field` (ingestion time if not set). |
 | `clustering`   | Up to 4 clustering columns.                                                 |
 | `description`  | Description of the table.                                                   |
+
+## Labels
+
+The `labels` of the config are set on the datasets and on the query jobs (DDL, `when`, `then`), so that the cost of
+the tests can be followed in the billing export, e.g. per team. The `labels` of a dataset are added to its own.
+BigTesty adds `bigtesty` and `bigtesty_run_id`, which are reserved. Keys and values follow the
+[BigQuery rules](https://cloud.google.com/bigquery/docs/labels-intro#requirements): lowercase letters, digits, `_`
+and `-`, up to 63 characters.
+
+## CMEK
+
+When the organization requires
+[customer-managed encryption keys](https://cloud.google.com/bigquery/docs/customer-managed-encryption), `kms_key_name`
+sets the key of the datasets and tables, in the config or per dataset. It is optional: without it, Google encrypts
+the data with its own keys.
+
+```yaml
+location: EU
+kms_key_name: projects/my-project/locations/europe/keyRings/my-ring/cryptoKeys/my-key
+```
+
+- The key must be in the location of the datasets: `europe` for the `EU` multi-region, `us` for `US`, the same
+  region otherwise.
+- The BigQuery encryption service account of the project needs `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the
+  key:
+
+```bash
+SA=$(bq show --encryption_service_account --project_id=my-project --format=json | jq -r .ServiceAccountID)
+gcloud kms keys add-iam-policy-binding my-key --keyring=my-ring --location=europe \
+  --member="serviceAccount:$SA" --role=roles/cloudkms.cryptoKeyEncrypterDecrypter
+```
+
+The tables created by the DDL files take the key of their dataset.

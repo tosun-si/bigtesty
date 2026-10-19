@@ -30,7 +30,8 @@ class RunContext:
 
     @property
     def labels(self) -> dict[str, str]:
-        return {BIGTESTY_RUN_ID_LABEL_KEY: self.run_id}
+        # The labels of the project config (cost center...) and the run ID, on all the jobs of the run.
+        return {**dict(self.plan.labels), BIGTESTY_RUN_ID_LABEL_KEY: self.run_id}
 
 
 def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
