@@ -84,7 +84,7 @@ container runs the command and exits, the JSON is read from its logs.
 
 ```java
 static String bigtesty(String... command) {
-    try (var container = new GenericContainer<>("groupbees/bigtesty:1.2.0")
+    try (var container = new GenericContainer<>("groupbees/bigtesty:1.3.0")
             .withFileSystemBind("bigtesty", "/usr/local/src/app/project", BindMode.READ_ONLY)
             .withFileSystemBind(
                 System.getProperty("user.home") + "/.config/gcloud",
