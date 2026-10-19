@@ -12,6 +12,15 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 DatasetId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_]+$")]
 TableRef = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_]+\.[A-Za-z0-9_\-$]+$")]
 Row = dict[str, Any]
+# The BigQuery label rules, in lowercase ASCII.
+LabelKey = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,62}$")]
+LabelValue = Annotated[str, StringConstraints(pattern=r"^[a-z0-9_-]{0,63}$")]
+Labels = dict[LabelKey, LabelValue]
+KmsKeyName = Annotated[
+    str, StringConstraints(pattern=r"^projects/[^/]+/locations/[^/]+/keyRings/[^/]+/cryptoKeys/[^/]+$")
+]
+# Set by BigTesty on the datasets and the jobs of a run.
+RESERVED_LABEL_KEYS = ("bigtesty", "bigtesty_run_id")
 
 
 class SpecModel(BaseModel):
@@ -30,6 +39,12 @@ def _require_exactly_one(model: BaseModel, *fields: str) -> None:
 def _require_at_most_one(model: BaseModel, *fields: str) -> None:
     if _count_set_fields(model, *fields) > 1:
         raise ValueError(f"only one of {', '.join(fields)} can be set")
+
+
+def _check_reserved_labels(labels: Labels) -> None:
+    reserved = [key for key in labels if key in RESERVED_LABEL_KEYS]
+    if reserved:
+        raise ValueError(f"reserved label keys, set by BigTesty: {', '.join(reserved)}")
 
 
 # ---------- Project config (bigtesty.yaml) ----------
@@ -64,6 +79,15 @@ class DatasetSpec(SpecModel):
         description="Glob patterns of SQL files executed after the dataset creation (CREATE TABLE, VIEW, "
         "FUNCTION, PROCEDURE...). The references to the configured datasets are isolated like in the tests.",
     )
+    kms_key_name: KmsKeyName | None = Field(
+        None, description="Cloud KMS key (CMEK) of the dataset and its tables, the project config one if not set."
+    )
+    labels: Labels = Field({}, description="Labels of the dataset, merged with the labels of the project config.")
+
+    @model_validator(mode="after")
+    def _check_labels(self) -> Self:
+        _check_reserved_labels(self.labels)
+        return self
 
 
 class ProjectConfig(SpecModel):
@@ -80,6 +104,17 @@ class ProjectConfig(SpecModel):
     max_bytes_billed: int | None = Field(None, gt=0, description="Maximum bytes billed of each query job.")
     table_expiration_hours: int = Field(6, gt=0, description="Safety net if the process is killed before cleanup.")
     max_workers: int = Field(8, gt=0, description="Number of scenarios and BigQuery jobs executed in parallel.")
+    kms_key_name: KmsKeyName | None = Field(
+        None,
+        description="Default Cloud KMS key (CMEK) of the datasets and tables, "
+        "projects/<project>/locations/<location>/keyRings/<key ring>/cryptoKeys/<key>.",
+    )
+    labels: Labels = Field({}, description="Labels of all the datasets and of the BigQuery jobs (e.g. cost center).")
+
+    @model_validator(mode="after")
+    def _check_labels(self) -> Self:
+        _check_reserved_labels(self.labels)
+        return self
 
     @model_validator(mode="after")
     def _check_unique_datasets(self) -> Self:

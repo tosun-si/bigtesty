@@ -183,6 +183,10 @@ The datasets are destroyed at the end of the run (`cleanup: always` by default, 
 the result in BigQuery). As a safety net, their tables expire after `table_expiration_hours` (6 by default), and
 `bigtesty gc` deletes the datasets left by killed runs.
 
+The config can set `labels` on the datasets and the query jobs (cost per team in the billing export), and a
+`kms_key_name` to encrypt the datasets with a customer-managed key (CMEK), see the
+[project config](https://tosun-si.github.io/bigtesty/writing-tests/project-config/).
+
 ## CLI
 
 ```bash

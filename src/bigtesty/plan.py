@@ -29,6 +29,9 @@ class DatasetPlan:
     description: str | None
     tables: tuple[TablePlan, ...]
     ddl_statements: tuple[str, ...]
+    kms_key_name: str | None = None
+    # (key, value) pairs: the labels of the project config merged with the ones of the dataset.
+    labels: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,8 @@ class RunPlan:
     table_expiration_hours: int
     max_workers: int
     update_snapshots: bool = False
+    # The labels of the project config, set on the datasets and on the jobs.
+    labels: tuple[tuple[str, str], ...] = ()
 
     @property
     def dataset_ids(self) -> tuple[str, ...]:

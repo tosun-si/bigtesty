@@ -117,7 +117,7 @@ def build_run_plan_for_scenarios(
         project_id=resolved_project_id,
         project_aliases=tuple(config.project_aliases),
         datasets=tuple(
-            to_dataset_plan(config_dir, dataset, location or config.location) for dataset in config.datasets
+            to_dataset_plan(config_dir, dataset, location or config.location, config) for dataset in config.datasets
         ),
         scenarios=tuple(
             to_scenario_plan(
@@ -135,6 +135,7 @@ def build_run_plan_for_scenarios(
         table_expiration_hours=config.table_expiration_hours,
         max_workers=config.max_workers,
         update_snapshots=update_snapshots,
+        labels=tuple(config.labels.items()),
     )
 
 
@@ -145,7 +146,9 @@ def scenario_id(tests_dir: Path, spec_path: Path, scenario_name: str) -> str:
     return f"{relative_path.as_posix()}::{scenario_name}"
 
 
-def to_dataset_plan(config_dir: Path, dataset: DatasetSpec, default_location: str | None) -> DatasetPlan:
+def to_dataset_plan(
+    config_dir: Path, dataset: DatasetSpec, default_location: str | None, config: ProjectConfig | None = None
+) -> DatasetPlan:
     dataset_location = dataset.location or default_location
     if not dataset_location:
         raise SpecError(f"The location of the dataset {dataset.id} is missing: set location in the config file")
@@ -156,6 +159,8 @@ def to_dataset_plan(config_dir: Path, dataset: DatasetSpec, default_location: st
         description=dataset.description,
         tables=tuple(to_table_plan(config_dir, table) for table in dataset.tables),
         ddl_statements=tuple(load_text_file(path) for path in resolve_globs(config_dir, dataset.ddl_files)),
+        kms_key_name=dataset.kms_key_name or (config.kms_key_name if config else None),
+        labels=tuple({**(config.labels if config else {}), **dataset.labels}.items()),
     )
 
 
