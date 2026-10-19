@@ -37,6 +37,12 @@ npm run dev     # http://localhost:4321/bigtesty/
 npm run build
 ```
 
+## Agent Skills
+
+The Agent Skills of `src/bigtesty/plugin/skills` document how to use BigTesty: a change of the CLI, the config or
+the test files updates them in the same pull request. The version of `src/bigtesty/plugin/.claude-plugin/plugin.json`
+follows the one of `pyproject.toml` (checked by the tests).
+
 ## Docker build
 
 ```bash
