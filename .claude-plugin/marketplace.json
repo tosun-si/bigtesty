@@ -1,0 +1,16 @@
+{
+  "name": "bigtesty",
+  "owner": {
+    "name": "Mazlum Tosun"
+  },
+  "metadata": {
+    "description": "BigTesty, integration tests on BigQuery: Agent Skills for its users."
+  },
+  "plugins": [
+    {
+      "name": "bigtesty",
+      "source": "./src/bigtesty/plugin",
+      "description": "Agent Skills for BigTesty: set it up, write test files, test Python code on BigQuery, debug a failing run."
+    }
+  ]
+}

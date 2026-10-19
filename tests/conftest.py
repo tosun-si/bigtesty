@@ -79,3 +79,9 @@ class FakeBigQueryClient:
 @pytest.fixture
 def fake_client() -> FakeBigQueryClient:
     return FakeBigQueryClient()
+
+
+@pytest.fixture(autouse=True)
+def isolated_home(tmp_path_factory, monkeypatch) -> None:
+    """The BigTesty skills installed in the real home directory must not change the output of the CLI."""
+    monkeypatch.setenv("HOME", str(tmp_path_factory.mktemp("home")))

@@ -17,6 +17,17 @@ from bigtesty.infra.ephemeral_infra import destroy_ephemeral_infra, destroy_expi
 from bigtesty.plan import RunPlan
 from bigtesty.report import format_run_report
 from bigtesty.runner import run_tests
+from bigtesty.skills import (
+    SkillTarget,
+    bundled_skills,
+    install_plan,
+    installed_markers,
+    installed_name,
+    skill_dirs,
+    stale,
+    stale_skills_message,
+    write,
+)
 from bigtesty.spec.loader import build_run_plan, find_config_file, load_model, load_spec_files
 from bigtesty.spec.models import ProjectConfig, SpecFile
 from bigtesty.testing import BigTestyInfra, load_infra_plan
@@ -32,12 +43,22 @@ def _show_version(show: bool) -> None:
 
 @app.callback()
 def main(
+    ctx: typer.Context,
     version: Annotated[
         bool,
         typer.Option("--version", callback=_show_version, is_eager=True, help="Show the BigTesty version and exit."),
     ] = False,
 ) -> None:
-    pass
+    if ctx.invoked_subcommand != "skills":
+        _warn_stale_skills()
+
+
+def _warn_stale_skills() -> None:
+    markers = {**installed_markers(Path.cwd()), **installed_markers(Path.home())}
+    message = stale_skills_message(stale(markers, __version__), __version__)
+
+    if message:
+        typer.echo(message, err=True)
 
 
 ConfigOption = Annotated[
@@ -207,6 +228,31 @@ def schema_command(
     for file_name, model in (("bigtesty-config.schema.json", ProjectConfig), ("bigtesty-test.schema.json", SpecFile)):
         (output_dir / file_name).write_text(json.dumps(model.model_json_schema(by_alias=True), indent=2) + "\n")
         typer.echo(output_dir / file_name)
+
+
+skills_app = typer.Typer(
+    help="Agent Skills for the coding agents: Claude Code, and the agents reading .agents/skills.",
+    no_args_is_help=True,
+)
+app.add_typer(skills_app, name="skills")
+
+
+@skills_app.command("install", help="Copy the skills of this version into the project (default) or the home directory.")
+def skills_install_command(
+    user: Annotated[bool, typer.Option("--user", help="Install in the home directory instead of the project.")] = False,
+    target: Annotated[
+        SkillTarget,
+        typer.Option(help="claude: .claude/skills, agents: .agents/skills (other agents), all: both."),
+    ] = SkillTarget.ALL,
+) -> None:
+    skills = bundled_skills()
+    dirs = skill_dirs(target, Path.home() if user else Path.cwd())
+    write(install_plan(skills, dirs, __version__))
+
+    for directory in dirs:
+        typer.echo(f"{directory}: {', '.join(installed_name(skill) for skill in sorted(skills))}")
+    if not user:
+        typer.echo("Commit them, so that everyone working on the project gets the same skills.")
 
 
 @app.command("version", help="Show the BigTesty version.")

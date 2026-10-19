@@ -199,6 +199,7 @@ bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty infra create -o json      # create the infra for the tests of another language
 bigtesty infra destroy --run-id x  # and delete it
 bigtesty schema -o schemas         # write the JSON Schemas
+bigtesty skills install            # copy the Agent Skills into the project
 ```
 
 | Option           | Env var                                    | Description                                       |
@@ -292,6 +293,19 @@ without a long-lived service account key.
 The [`04-uv-project`](examples/04-uv-project/) example runs the tests with uv and pytest in
 [GitHub Actions](examples/04-uv-project/ci/github-actions.yaml), [GitLab CI](examples/04-uv-project/ci/gitlab-ci.yml)
 and [Cloud Build](examples/04-uv-project/ci/cloudbuild.yaml).
+
+## Agent Skills
+
+Four [Agent Skills](https://tosun-si.github.io/bigtesty/start-here/agent-skills/) help a coding agent set BigTesty
+up, write the test files and the Python tests, and debug a failed run:
+
+```bash
+bigtesty skills install                                   # .claude/skills and .agents/skills of the project
+```
+
+```
+/plugin install bigtesty --marketplace tosun-si/bigtesty
+```
 
 ## Migrating from 0.x
 

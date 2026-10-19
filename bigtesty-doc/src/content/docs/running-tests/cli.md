@@ -1,6 +1,6 @@
 ---
 title: CLI
-description: "The bigtesty command line: test, validate, gc, schema."
+description: "The bigtesty command line: test, validate, gc, infra, schema, skills."
 ---
 
 ```bash
@@ -13,6 +13,7 @@ bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty infra create -o json      # create the infra for the tests of another language
 bigtesty infra destroy --run-id x  # and delete it
 bigtesty schema -o schemas         # write the JSON Schemas of the config and test files
+bigtesty skills install            # copy the Agent Skills into the project, --user for the home directory
 bigtesty --version                 # or bigtesty version
 ```
 

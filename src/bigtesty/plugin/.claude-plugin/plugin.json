@@ -1,0 +1,12 @@
+{
+  "name": "bigtesty",
+  "displayName": "BigTesty",
+  "version": "1.1.0",
+  "description": "Agent Skills for BigTesty, integration tests on BigQuery: setup, test files, Python tests, troubleshooting.",
+  "author": {
+    "name": "Mazlum Tosun"
+  },
+  "homepage": "https://tosun-si.github.io/bigtesty/",
+  "repository": "https://github.com/tosun-si/bigtesty",
+  "license": "MIT"
+}
