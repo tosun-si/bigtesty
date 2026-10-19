@@ -67,6 +67,7 @@ vars: { env: test }                                            # defaults, overr
 # tests/render.py: call the production rendering code, so that the tests render the SQL like the production
 from my_pipeline.sql import render_sql
 
+
 def render(sql: str, vars: dict) -> str:
     return render_sql(sql, **vars)
 ```
