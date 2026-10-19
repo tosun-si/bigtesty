@@ -251,11 +251,11 @@ import pytest
 from bigtesty.testing import BigTestyInfra
 
 
-@pytest.fixture(scope="class")   # the scope is the lifecycle of the infra
+@pytest.fixture(scope="class")  # the scope is the lifecycle of the infra
 def infra():
     with BigTestyInfra.from_config("bigtesty.yaml") as infra:
         infra.load("monitoring.job_failure", [{"featureName": "featurePSG", "jobName": "job1"}])
-        build_failures_summary(infra.client, infra.dataset_id("monitoring"))   # the code under test
+        build_failures_summary(infra.client, infra.dataset_id("monitoring"))  # the code under test
         yield infra
 
 
