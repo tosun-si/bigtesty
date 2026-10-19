@@ -44,6 +44,8 @@ bigtesty = "bigtesty.pytest_plugin"
 
 [dependency-groups]
 dev = [
+    # The template engine of the production code of the examples/06-production-sql example.
+    "jinja2>=3.1.6",
     "mypy>=1.11",
     "pytest>=8.2",
     "ruff>=0.6",

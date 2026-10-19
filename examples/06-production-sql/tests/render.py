@@ -1,14 +1,17 @@
 """
-The SQL renderer of the tests: the template engine of the team, here an in-house one replacing {{ name }} by a var.
-In a real project, this function calls the rendering code of the production (Jinja environment, Airflow macros...),
-so that the tests render the SQL exactly like the production.
+The sql_renderer of bigtesty.yaml: the tests render the SQL with the rendering code of the production, the Jinja
+environment and the macros of monitoring.templating. A broken macro or a missing var fails the tests too.
 """
 
-import re
+import sys
+from pathlib import Path
 from typing import Any
 
-_VARIABLE = re.compile(r"{{\s*(\w+)\s*}}")
+# The example is run from the repository root: in a project where monitoring is installed, only the import is needed.
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+
+from monitoring.templating import render_sql  # noqa: E402
 
 
 def render(sql: str, vars: dict[str, Any]) -> str:
-    return _VARIABLE.sub(lambda match: str(vars[match.group(1)]), sql)
+    return render_sql(sql, **vars)

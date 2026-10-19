@@ -10,6 +10,7 @@ from typing import Any
 
 from bigtesty.exceptions import SpecError
 from bigtesty.functions import load_function
+from bigtesty.step_error import display_path
 
 SqlRenderer = Callable[[str, dict[str, Any], Path | None], str]
 
@@ -37,7 +38,7 @@ def render_sql(renderer: SqlRenderer | None, sql: str, variables: dict[str, Any]
     except SpecError:
         raise
     except Exception as e:
-        source = f" ({path})" if path else ""
+        source = f" ({display_path(path)})" if path else ""
         raise SpecError(f"{where}{source}: the SQL renderer failed: {type(e).__name__}: {e}") from e
 
 
