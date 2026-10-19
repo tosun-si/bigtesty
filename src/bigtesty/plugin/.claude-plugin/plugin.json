@@ -1,7 +1,7 @@
 {
   "name": "bigtesty",
   "displayName": "BigTesty",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Agent Skills for BigTesty, integration tests on BigQuery: setup, test files, Python tests, troubleshooting.",
   "author": {
     "name": "Mazlum Tosun"
