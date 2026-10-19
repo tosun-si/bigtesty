@@ -37,7 +37,7 @@ Both can live in the same project, with the same `bigtesty.yaml` and the same `p
 | `dataset_id("monitoring")`         | `project.monitoring_<run_id>_0`, the dataset to give to the code under test.                 |
 | `table_id("monitoring.t")`         | `project.monitoring_<run_id>_0.t`.                                                            |
 | `load(table, rows)`                | Appends rows (a list of dicts, or a JSON / YAML file) with a free load job.                   |
-| `query(sql)`                       | Runs a query or a script and returns its rows as dicts. The configured datasets are rewritten, as in the test files. |
+| `query(sql, parameters)`           | Runs a query or a script and returns its rows as dicts. The configured datasets are rewritten, as in the test files. `parameters`: the BigQuery [query parameters](/bigtesty/writing-tests/test-files/#query-parameters), e.g. `{"since": {"type": "DATE", "value": "2026-01-01"}}`. |
 | `sql(sql)`                         | The rewritten SQL, without running it.                                                        |
 | `truncate(*tables)`                | Deletes all the rows of the given tables, e.g. `truncate("monitoring.job_failure")`.          |
 | `reset()`                          | Deletes all the rows of all the tables of the config, in one script. The DDL objects (views, functions...) are kept. |

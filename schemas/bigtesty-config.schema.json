@@ -114,6 +114,27 @@
       "title": "Partitioning",
       "type": "object"
     },
+    "SqlRendererSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "module": {
+          "description": "Python file containing the function, relative to the config file.",
+          "title": "Module",
+          "type": "string"
+        },
+        "function": {
+          "description": "Function called with (sql, vars), and path= (the SQL file) when it accepts it, returning the rendered SQL: the template engine of the team.",
+          "title": "Function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "function"
+      ],
+      "title": "SqlRendererSpec",
+      "type": "object"
+    },
     "TableSpec": {
       "additionalProperties": false,
       "properties": {
@@ -311,6 +332,25 @@
         }
       },
       "title": "Labels",
+      "type": "object"
+    },
+    "sql_renderer": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SqlRendererSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Renders the templated SQL (DDL, when, then) before the rewrite of the datasets."
+    },
+    "vars": {
+      "additionalProperties": true,
+      "default": {},
+      "description": "Default variables of the SQL renderer, overridden by the scenario vars.",
+      "title": "Vars",
       "type": "object"
     }
   },

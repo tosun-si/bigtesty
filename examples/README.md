@@ -10,6 +10,7 @@ README with the commands.
 | [`03-merge-with-ddl`](03-merge-with-ddl/) | A `when` step running a `MERGE` script, a view created with a DDL file, several `then` assertions on a table and a query |
 | [`04-uv-project`](04-uv-project/) | A project with BigTesty as a uv dev dependency from PyPI, tests run with pytest, CI with GitHub Actions, GitLab CI and Cloud Build |
 | [`05-python-tests`](05-python-tests/) | Python code writing to BigQuery tested with pytest and unittest: one infra created and deleted once for several tests |
+| [`06-production-sql`](06-production-sql/) | The production SQL tested as is from `src/`: a template rendered by the engine of the team (`sql_renderer`, `vars`), BigQuery query parameters |
 
 They need Application Default Credentials and the `roles/bigquery.user` role on the test project:
 
@@ -18,12 +19,13 @@ gcloud auth application-default login
 export GOOGLE_CLOUD_PROJECT=<gcp_project_id>
 ```
 
-Run the examples 01 to 03 from the repository root, with BigTesty from the sources:
+Run the examples 01 to 03 and 06 from the repository root, with BigTesty from the sources:
 
 ```bash
 uv run bigtesty test --config examples/01-queries/bigtesty.yaml
 uv run bigtesty test --config examples/02-assertion-functions/bigtesty.yaml
 uv run bigtesty test --config examples/03-merge-with-ddl/bigtesty.yaml
+uv run bigtesty test --config examples/06-production-sql/bigtesty.yaml
 ```
 
 The example 04 is a standalone uv project, see its [README](04-uv-project/). The example 05 runs with pytest:

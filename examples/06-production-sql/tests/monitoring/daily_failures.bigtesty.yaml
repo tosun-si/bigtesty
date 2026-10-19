@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
+
+description: The production SQL of the daily failures, tested as is from src/
+
+scenarios:
+  - name: daily_failures_of_the_selected_features
+    description: The {{ ds }} var of the template, the @feature_names and @min_failures query parameters
+    vars: { ds: "2026-01-10" }
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: featurePSG, jobName: job1, componentType: dataflow, dwhCreationDate: "2026-01-10 08:00:00" }
+          - { featureName: featurePSG, jobName: job2, componentType: dataflow, dwhCreationDate: "2026-01-10 09:00:00" }
+          - { featureName: featureOM, jobName: job3, componentType: dataflow, dwhCreationDate: "2026-01-10 10:00:00" }
+          - { featureName: featureOM, jobName: job4, componentType: dataflow, dwhCreationDate: "2026-01-10 11:00:00" }
+          - { featureName: featureXY, jobName: job5, componentType: dataflow, dwhCreationDate: "2026-01-10 12:00:00" }
+          - { featureName: featurePSG, jobName: job6, componentType: dataflow, dwhCreationDate: "2026-01-11 08:00:00" }
+      - table: monitoring.daily_failures
+        rows:
+          - { day: "2026-01-10", featureName: featurePSG, failuresCount: 99, env: test }
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+      parameters:
+        feature_names: [featurePSG, featureOM, featureXY]
+        min_failures: 2
+    then:
+      - name: one_row_per_feature_with_enough_failures
+        table: monitoring.daily_failures
+        expected:
+          - { day: "2026-01-10", featureName: featurePSG, failuresCount: 2, env: test }
+          - { day: "2026-01-10", featureName: featureOM, failuresCount: 2, env: test }
+      - name: dashboard_query
+        query_file: ../../src/monitoring/sql/find_daily_failures.sql
+        parameters:
+          feature_name: featurePSG
+          since: { type: DATE, value: "2026-01-01" }
+        expected:
+          - { day: "2026-01-10", featureName: featurePSG, failuresCount: 2 }
+
+  - name: no_failure_on_another_day
+    vars: { ds: "2026-01-12" }
+    given:
+      - table: monitoring.job_failure
+        rows:
+          - { featureName: featurePSG, jobName: job1, componentType: dataflow, dwhCreationDate: "2026-01-10 08:00:00" }
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+      parameters:
+        feature_names: [featurePSG]
+        min_failures: 1
+    then:
+      - table: monitoring.daily_failures
+        row_count: 0

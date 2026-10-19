@@ -111,6 +111,22 @@
           "minItems": 1,
           "title": "Then",
           "type": "array"
+        },
+        "parameters": {
+          "default": {},
+          "description": "BigQuery query parameters (@name in the SQL): a value whose type is inferred (string, integer, float, boolean, array), or {type: DATE, value: '2026-01-10'}. For the when and the then queries.",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {}
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "vars": {
+          "additionalProperties": true,
+          "default": {},
+          "description": "Variables of the SQL renderer of the config, added to the config vars.",
+          "title": "Vars",
+          "type": "object"
         }
       },
       "required": [
@@ -257,6 +273,15 @@
           ],
           "default": null,
           "title": "Float Tolerance"
+        },
+        "parameters": {
+          "default": {},
+          "description": "BigQuery query parameters (@name in the SQL): a value whose type is inferred (string, integer, float, boolean, array), or {type: DATE, value: '2026-01-10'}. Added to the scenario parameters.",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {}
+          },
+          "title": "Parameters",
+          "type": "object"
         }
       },
       "title": "ThenSpec",
@@ -289,6 +314,15 @@
           ],
           "default": null,
           "title": "Sql File"
+        },
+        "parameters": {
+          "default": {},
+          "description": "BigQuery query parameters (@name in the SQL): a value whose type is inferred (string, integer, float, boolean, array), or {type: DATE, value: '2026-01-10'}. Added to the scenario parameters.",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {}
+          },
+          "title": "Parameters",
+          "type": "object"
         }
       },
       "title": "WhenSpec",

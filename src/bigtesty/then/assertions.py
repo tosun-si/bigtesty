@@ -1,12 +1,8 @@
-import hashlib
-import importlib.util
 import traceback
 from collections.abc import Callable, Sequence
-from functools import cache
-from pathlib import Path
 from typing import Any
 
-from bigtesty.exceptions import SpecError
+from bigtesty.functions import load_function
 from bigtesty.plan import AssertionFunctionPlan, Row, ThenPlan
 from bigtesty.report import CheckResult
 from bigtesty.then.row_diff import diff_rows, format_row_diff
@@ -59,25 +55,7 @@ def check_function(function: AssertionFunctionPlan, actual: list[Row], expected:
     check_name = f"{function.module_path.name}::{function.function}"
 
     try:
-        load_assertion_function(function.module_path, function.function)(actual, expected)
+        load_function(function.module_path, function.function)(actual, expected)
         return CheckResult(check=check_name, passed=True)
     except AssertionError as e:
         return CheckResult(check=check_name, passed=False, message="".join(traceback.format_exception(e)))
-
-
-@cache
-def load_assertion_function(module_path: Path, function_name: str) -> AssertionFunction:
-    # A unique module name per file, two assertion files can have the same name in different folders.
-    module_name = f"bigtesty_assertions_{hashlib.sha1(str(module_path).encode()).hexdigest()[:12]}"
-    module_spec = importlib.util.spec_from_file_location(module_name, module_path)
-
-    if module_spec is None or module_spec.loader is None:
-        raise SpecError(f"Cannot load the assertion functions module {module_path}")
-
-    module = importlib.util.module_from_spec(module_spec)
-    module_spec.loader.exec_module(module)
-
-    if not callable(function := getattr(module, function_name, None)):
-        raise SpecError(f"The function {function_name} doesn't exist in {module_path}")
-
-    return function

@@ -2,6 +2,7 @@
 Loads and validates the project config and the test files, then resolves them into a RunPlan.
 """
 
+from dataclasses import replace
 from glob import glob
 from pathlib import Path
 from typing import Any, TypeVar
@@ -10,10 +11,12 @@ from google.cloud.bigquery import SchemaField
 from pydantic import BaseModel, ValidationError
 
 from bigtesty.exceptions import SpecError
+from bigtesty.parameters import to_query_parameters
 from bigtesty.plan import (
     AssertionFunctionPlan,
     DatasetPlan,
     GivenPlan,
+    QueryParameter,
     RunPlan,
     ScenarioPlan,
     TablePlan,
@@ -21,6 +24,7 @@ from bigtesty.plan import (
 )
 from bigtesty.spec.files import load_data_file, load_text_file
 from bigtesty.spec.models import DatasetSpec, GivenSpec, ProjectConfig, ScenarioSpec, SpecFile, TableSpec, ThenSpec
+from bigtesty.sql_renderer import SqlRenderer, load_sql_renderer, render_sql
 
 CONFIG_FILE_NAMES = ("bigtesty.yaml", "bigtesty.yml", "bigtesty.json")
 TEST_FILE_SUFFIXES = (".bigtesty.yaml", ".bigtesty.yml", ".bigtesty.json")
@@ -112,12 +116,19 @@ def build_run_plan_for_scenarios(
     config_dir = config_path.parent
     tests_dir = config_dir / config.tests
     dataset_ids = {dataset.id for dataset in config.datasets}
+    renderer = (
+        load_sql_renderer(config_dir / config.sql_renderer.module, config.sql_renderer.function)
+        if config.sql_renderer is not None
+        else None
+    )
+    _check_vars_have_a_renderer(config, [scenario for _, scenario in scenarios], renderer)
 
     return RunPlan(
         project_id=resolved_project_id,
         project_aliases=tuple(config.project_aliases),
         datasets=tuple(
-            to_dataset_plan(config_dir, dataset, location or config.location, config) for dataset in config.datasets
+            to_dataset_plan(config_dir, dataset, location or config.location, config, renderer)
+            for dataset in config.datasets
         ),
         scenarios=tuple(
             to_scenario_plan(
@@ -127,6 +138,8 @@ def build_run_plan_for_scenarios(
                 scenario,
                 dataset_ids,
                 update_snapshots=update_snapshots,
+                renderer=renderer,
+                config_vars=config.vars,
             )
             for index, (spec_path, scenario) in enumerate(scenarios)
         ),
@@ -146,8 +159,19 @@ def scenario_id(tests_dir: Path, spec_path: Path, scenario_name: str) -> str:
     return f"{relative_path.as_posix()}::{scenario_name}"
 
 
+def _check_vars_have_a_renderer(
+    config: ProjectConfig, scenarios: list[ScenarioSpec], renderer: SqlRenderer | None
+) -> None:
+    if renderer is None and (config.vars or any(scenario.vars for scenario in scenarios)):
+        raise SpecError("vars are set but the config has no sql_renderer to render the SQL with them")
+
+
 def to_dataset_plan(
-    config_dir: Path, dataset: DatasetSpec, default_location: str | None, config: ProjectConfig | None = None
+    config_dir: Path,
+    dataset: DatasetSpec,
+    default_location: str | None,
+    config: ProjectConfig | None = None,
+    renderer: SqlRenderer | None = None,
 ) -> DatasetPlan:
     dataset_location = dataset.location or default_location
     if not dataset_location:
@@ -160,7 +184,10 @@ def to_dataset_plan(
         location=dataset_location,
         description=dataset.description,
         tables=tuple(to_table_plan(config_dir, table) for table in dataset.tables),
-        ddl_statements=tuple(load_text_file(path) for path in ddl_files),
+        ddl_statements=tuple(
+            render_sql(renderer, load_text_file(path), config.vars if config else {}, path, f"ddl of {dataset.id}")
+            for path in ddl_files
+        ),
         kms_key_name=dataset.kms_key_name or (config.kms_key_name if config else None),
         labels=tuple({**(config.labels if config else {}), **dataset.labels}.items()),
         ddl_files=tuple(ddl_files),
@@ -199,8 +226,21 @@ def to_scenario_plan(
     scenario: ScenarioSpec,
     dataset_ids: set[str],
     update_snapshots: bool = False,
+    renderer: SqlRenderer | None = None,
+    config_vars: dict[str, Any] | None = None,
 ) -> ScenarioPlan:
     when = scenario.when
+    when_file = spec_dir / when.sql_file if when is not None and when.sql_file is not None else None
+    variables = {**(config_vars or {}), **scenario.vars}
+
+    def render(sql: str, path: Path | None, step: str) -> str:
+        return render_sql(renderer, sql, variables, path, f"{scenario_id} {step}")
+
+    def parameters(*specs: dict[str, Any]) -> tuple[QueryParameter, ...]:
+        try:
+            return to_query_parameters({name: value for spec in specs for name, value in spec.items()})
+        except SpecError as e:
+            raise SpecError(f"{scenario_id}: {e}") from e
 
     return ScenarioPlan(
         scenario_id=scenario_id,
@@ -208,13 +248,23 @@ def to_scenario_plan(
         name=scenario.name,
         given=tuple(to_given_plan(scenario_id, spec_dir, given, dataset_ids) for given in scenario.given),
         when_sql=(
-            None if when is None else when.sql if when.sql is not None else load_text_file(spec_dir / when.sql_file)  # type: ignore[operator]
+            None
+            if when is None
+            else render(when.sql if when.sql is not None else load_text_file(when_file), when_file, "when")  # type: ignore[arg-type]
         ),
         then=tuple(
-            to_then_plan(scenario_id, spec_dir, then_index, then, dataset_ids, update_snapshots)
+            replace(
+                then_plan,
+                query=render(then_plan.query, then_plan.query_file, f"then {then_plan.name}")
+                if then.table is None
+                else then_plan.query,
+                parameters=parameters(scenario.parameters, then.parameters),
+            )
             for then_index, then in enumerate(scenario.then)
+            for then_plan in [to_then_plan(scenario_id, spec_dir, then_index, then, dataset_ids, update_snapshots)]
         ),
-        when_file=spec_dir / when.sql_file if when is not None and when.sql_file is not None else None,
+        when_file=when_file,
+        when_parameters=parameters(scenario.parameters, when.parameters) if when is not None else (),
     )
 
 

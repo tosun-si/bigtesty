@@ -1,0 +1,15 @@
+-- Production job: run every day by the scheduler, which renders the ds and env vars of the template, and passes
+-- the query parameters.
+DELETE FROM `my-prod-project.monitoring.daily_failures` WHERE day = '{{ ds }}';
+
+INSERT INTO `my-prod-project.monitoring.daily_failures` (day, featureName, failuresCount, env)
+SELECT
+  DATE(dwhCreationDate) AS day,
+  featureName,
+  COUNT(*) AS failuresCount,
+  '{{ env }}' AS env
+FROM `my-prod-project.monitoring.job_failure`
+WHERE DATE(dwhCreationDate) = '{{ ds }}'
+  AND featureName IN UNNEST(@feature_names)
+GROUP BY day, featureName
+HAVING COUNT(*) >= @min_failures;

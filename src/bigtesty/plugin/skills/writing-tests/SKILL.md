@@ -37,15 +37,42 @@ scenarios:
 
 ## Rules
 
-- **Reference the production SQL file** in `when.sql_file` / `query_file` instead of copying it: the references to
-  the configured datasets (`monitoring.t`, `` `my-prod-project.monitoring.t` `` with `project_aliases`) are
-  rewritten to the scenario datasets. Every dataset of the SQL must be declared in `bigtesty.yaml`.
+- **Reference the production SQL file** in `when.sql_file` / `query_file` instead of copying it, e.g.
+  `../../src/monitoring/sql/job.sql` (paths are relative to the test file): the references to the configured
+  datasets (`monitoring.t`, `` `my-prod-project.monitoring.t` `` with `project_aliases`) are rewritten to the
+  scenario datasets. Every dataset of the SQL must be declared in `bigtesty.yaml`. Never copy the SQL into the tests
+  or generate a copy: the copy drifts from the production.
 - `when` is optional and runs as a BigQuery script: DML, `MERGE`, `CALL`, `DECLARE`, `BEGIN...END`. To test a plain
   query, skip `when` and put the query in the `then`.
 - `given` rows only need the columns that matter; they are loaded with the table schema (a wrong type fails the
   scenario). Load jobs are free, only the query jobs are billed (at least 10 MiB each).
 - One scenario per behaviour: the nominal case, the edge cases (empty input, nulls, duplicates, late data), each with
   a name saying what it checks.
+
+## Production SQL with parameters and templates
+
+- **Query parameters** (`@name`): `parameters` on the scenario (when and all the then), on the `when`, on a `then`
+  (overrides). Type inferred (string, integer, float, boolean, arrays of them), or explicit:
+  `since: { type: DATE, value: "2026-01-01" }` (also `TIMESTAMP`, `DATETIME`, `NUMERIC`, `JSON`..., and nulls).
+- **Templates** (`{{ ds }}`, Jinja, Airflow macros, an in-house engine): BigTesty doesn't render them itself. Declare
+  the engine of the team in `bigtesty.yaml` and pass `vars` per scenario:
+
+```yaml
+# bigtesty.yaml
+sql_renderer: { module: tests/render.py, function: render }   # render(sql, vars[, path=]) -> str
+vars: { env: test }                                            # defaults, overridden by the scenario vars
+```
+
+```python
+# tests/render.py: call the production rendering code, so that the tests render the SQL like the production
+from my_pipeline.sql import render_sql
+
+def render(sql: str, vars: dict) -> str:
+    return render_sql(sql, **vars)
+```
+
+The DDL, `when` and `then` SQL is rendered first, then rewritten. `bigtesty test -v` shows the result. Example:
+https://github.com/tosun-si/bigtesty/tree/main/examples/06-production-sql.
 
 ## Assertions
 

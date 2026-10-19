@@ -180,6 +180,30 @@ JSON Schemas are published for the config and the test files. With the VS Code Y
 # yaml-language-server: $schema=https://raw.githubusercontent.com/tosun-si/bigtesty/main/schemas/bigtesty-test.schema.json
 ```
 
+## Production SQL
+
+The production SQL is tested as is, from its own folder, even when it is a template with query parameters:
+
+```yaml
+# bigtesty.yaml: the template engine of the team (Jinja, Airflow macros, in-house...), called by BigTesty
+sql_renderer: { module: tests/render.py, function: render }
+```
+
+```yaml
+# test file
+scenarios:
+  - name: daily_failures
+    vars: { ds: "2026-01-10" }                        # rendered by the sql_renderer
+    when:
+      sql_file: ../../src/monitoring/sql/build_daily_failures.sql
+      parameters:                                    # BigQuery query parameters (@name)
+        feature_names: [featurePSG, featureOM]
+        since: { type: DATE, value: "2026-01-01" }
+```
+
+See [Production SQL](https://tosun-si.github.io/bigtesty/writing-tests/test-files/#production-sql) and the
+[`06-production-sql`](examples/06-production-sql/) example.
+
 ## Isolation and SQL rewrite
 
 For each run, BigTesty creates one dataset per configured dataset and per scenario, e.g. `monitoring_hlnyks_0`,

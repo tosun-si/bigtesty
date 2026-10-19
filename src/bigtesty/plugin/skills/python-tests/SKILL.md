@@ -26,7 +26,7 @@ with BigTestyInfra.from_config("tests/bigtesty.yaml") as infra:  # start() / sto
 |---|---|
 | `dataset_id("monitoring")` / `table_id("monitoring.t")` | the IDs to give to the code under test |
 | `sql(sql)` | rewrite production SQL with hardcoded datasets, e.g. passed to the code under test |
-| `query(sql)` | run a query or script, the configured datasets are rewritten |
+| `query(sql, parameters=None)` | run a query or script, the configured datasets are rewritten; `parameters` are BigQuery query parameters (`{"since": {"type": "DATE", "value": "2026-01-01"}}`) |
 | `truncate(*tables)` / `reset()` | empty some / all the tables (free), the DDL objects are kept |
 | `client`, `run_id`, `bytes_billed` | the BigQuery client, the run ID, the bytes billed by `query` |
 

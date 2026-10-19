@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        example: [01-queries, 02-assertion-functions, 03-merge-with-ddl, 05-python-tests]
+        example: [01-queries, 02-assertion-functions, 03-merge-with-ddl, 05-python-tests, 06-production-sql]
 
     steps:
       - name: 'Checkout'
