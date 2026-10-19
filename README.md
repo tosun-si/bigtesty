@@ -119,10 +119,24 @@ FAILED  monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_
 
 ________ monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features ________
 then[0] / rows:
-    expected 2 rows, got 2, diff from expected to actual:
-    Value of root[0]['failuresCount'] changed from 8 to 7.
+    expected 2 rows, got 2: 1 changed
+      changed     {featureName: "featurePSG", lastFailureDate: "2026-01-11T10:00:00Z"}  failuresCount: 8 → 7
+rerun: bigtesty test -k "monitoring/merge_failures_summary.bigtesty.yaml::merge_updates_existing_and_inserts_new_features"
 
 3 passed, 1 failed, 70.0 MiB billed (run zivarf)
+```
+
+A failed `then` shows the changed rows (matched on their equal columns), the missing and the unexpected rows. An
+error shows the failed step, its SQL file and the executed SQL at the position of the error:
+
+```text
+when (tests/monitoring/when/merge_failures_summary.sql): BadRequest: Unrecognized name: failureCount at [3:3]
+job: 2007a27c-0e0e-4ad8-b8f9-194a77adfeec
+
+  1 | UPDATE `my-project.monitoring_zivarf_3.job_failure_summary`
+  2 | SET
+  3 |   failureCount = failureCount + 1
+    |   ^
 ```
 
 The bytes billed are the ones of the query jobs (DDL, `when` and `then`), BigQuery bills at least 10 MiB per

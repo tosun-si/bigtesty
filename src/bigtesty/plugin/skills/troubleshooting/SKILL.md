@@ -17,8 +17,17 @@ which would also delete the datasets of the runs in progress of the other develo
 
 ## Exit code 1: an assertion failed
 
-The report shows a diff from expected to actual per `then` block, e.g.
-`Value of root[0]['failuresCount'] changed from 8 to 7`.
+The report shows, per `then` block, the changed rows (matched on their equal columns), the missing and the
+unexpected rows:
+
+```text
+failures_per_feature / rows:
+    expected 3 rows, got 3: 1 changed, 1 missing, 1 unexpected
+      changed     {featureName: "f1"}  n: 2 → 1
+      missing     {featureName: "f4", n: 1}
+      unexpected  {featureName: "f3", n: 1}
+rerun: bigtesty test -k "monitoring/failures.bigtesty.yaml::wrong_value_and_missing_row"
+```
 
 - Decide first whether the SQL or the expected rows are wrong; never update the expected rows just to pass.
 - `expected N rows, got M`: a join, a filter or a `given` row is missing. Query the kept datasets.
@@ -40,6 +49,10 @@ The report shows a diff from expected to actual per `then` block, e.g.
 | `GCP authentication error` | `gcloud auth application-default login`, or the CI auth step |
 
 ## BigQuery errors in a scenario
+
+The error names the failed step (`ddl of <dataset>`, `given <table>`, `when`, `then <name>`), its SQL file, the
+BigQuery job, and the executed SQL (rewritten to the scenario datasets) with a caret at the position of the error.
+For a `given`, it shows the rows rejected by the load job.
 
 - `Access Denied` / `403`: the account needs `roles/bigquery.user` on the test project, plus read access to any
   dataset of another project that the SQL reads without declaring it.

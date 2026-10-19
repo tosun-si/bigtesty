@@ -32,6 +32,8 @@ class DatasetPlan:
     kms_key_name: str | None = None
     # (key, value) pairs: the labels of the project config merged with the ones of the dataset.
     labels: tuple[tuple[str, str], ...] = ()
+    # The file of each DDL statement, shown in the errors.
+    ddl_files: tuple[Path, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -60,6 +62,8 @@ class ThenPlan:
     float_tolerance: float | None
     # The file of the expected rows, rewritten from the actual rows by `bigtesty test --update`.
     expected_file: Path | None = None
+    # The file of the query, shown in the errors.
+    query_file: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -70,6 +74,8 @@ class ScenarioPlan:
     given: tuple[GivenPlan, ...]
     when_sql: str | None
     then: tuple[ThenPlan, ...]
+    # The file of the when SQL, shown in the errors.
+    when_file: Path | None = None
 
 
 @dataclass(frozen=True)

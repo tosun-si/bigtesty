@@ -69,7 +69,11 @@ def format_run_report(run_report: RunReport) -> str:
             f"({r.duration_seconds:.1f}s, {format_bytes(r.bytes_billed)} billed)"
             for r in run_report.scenario_reports
         ),
-        *(line for report in run_report.failed_reports for line in format_scenario_failure(report)),
+        *(
+            line
+            for report in run_report.failed_reports
+            for line in [*format_scenario_failure(report), f'rerun: bigtesty test -k "{report.scenario_id}"']
+        ),
         *(
             ["", f"Updated {len(run_report.updated_files)} expected file(s):", *map(str, run_report.updated_files)]
             if run_report.updated_files

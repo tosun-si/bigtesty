@@ -14,6 +14,7 @@ from google.cloud import bigquery
 from bigtesty import __version__
 from bigtesty.exceptions import BigTestyError
 from bigtesty.infra.ephemeral_infra import destroy_ephemeral_infra, destroy_expired_datasets, generate_run_id
+from bigtesty.junit import write_junit_xml
 from bigtesty.plan import RunPlan
 from bigtesty.report import format_run_report
 from bigtesty.runner import run_tests
@@ -101,6 +102,9 @@ def test_command(
             "missing ones.",
         ),
     ] = False,
+    junit_xml: Annotated[
+        Path | None, typer.Option("--junit-xml", help="Write a JUnit XML report, for the CI tools.")
+    ] = None,
     verbose: VerboseOption = False,
 ) -> None:
     _configure_logging(verbose)
@@ -114,6 +118,8 @@ def test_command(
         run_report = run_tests(client, plan, generate_run_id())
 
     typer.echo(format_run_report(run_report))
+    if junit_xml is not None:
+        write_junit_xml(run_report, junit_xml)
 
     if not run_report.passed:
         raise typer.Exit(code=1)

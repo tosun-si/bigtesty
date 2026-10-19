@@ -153,14 +153,17 @@ def to_dataset_plan(
     if not dataset_location:
         raise SpecError(f"The location of the dataset {dataset.id} is missing: set location in the config file")
 
+    ddl_files = resolve_globs(config_dir, dataset.ddl_files)
+
     return DatasetPlan(
         dataset_id=dataset.id,
         location=dataset_location,
         description=dataset.description,
         tables=tuple(to_table_plan(config_dir, table) for table in dataset.tables),
-        ddl_statements=tuple(load_text_file(path) for path in resolve_globs(config_dir, dataset.ddl_files)),
+        ddl_statements=tuple(load_text_file(path) for path in ddl_files),
         kms_key_name=dataset.kms_key_name or (config.kms_key_name if config else None),
         labels=tuple({**(config.labels if config else {}), **dataset.labels}.items()),
+        ddl_files=tuple(ddl_files),
     )
 
 
@@ -211,6 +214,7 @@ def to_scenario_plan(
             to_then_plan(scenario_id, spec_dir, then_index, then, dataset_ids, update_snapshots)
             for then_index, then in enumerate(scenario.then)
         ),
+        when_file=spec_dir / when.sql_file if when is not None and when.sql_file is not None else None,
     )
 
 
@@ -263,6 +267,7 @@ def to_then_plan(
         compare_columns=then.compare_columns,
         float_tolerance=then.float_tolerance,
         expected_file=expected_file,
+        query_file=spec_dir / then.query_file if then.query_file is not None else None,
     )
 
 
