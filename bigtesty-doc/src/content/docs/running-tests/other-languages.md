@@ -42,7 +42,9 @@ configuration: `-v $GOOGLE_APPLICATION_CREDENTIALS:/creds.json -e GOOGLE_APPLICA
 
 ## Java and JUnit 5
 
-With the CLI (installed with `uv tool install bigtesty`) or `docker run`, from `@BeforeAll` / `@AfterAll`:
+With the CLI (installed with `uv tool install bigtesty`) or `docker run`, from `@BeforeAll` / `@AfterAll`. A complete
+Maven project, with a JUnit 5 extension, parameterized scenarios and its CI, is in the
+[`bigtesty-java-example`](https://github.com/tosun-si/bigtesty-java-example) repository.
 
 ```java
 class FailuresSummaryTest {
