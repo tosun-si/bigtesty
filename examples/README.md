@@ -1,7 +1,8 @@
 # BigTesty examples
 
-Small BigTesty projects you can run as they are. Each folder has its own `bigtesty.yaml`, its test files and a
-README with the commands.
+Small BigTesty projects you can run as they are, also listed in the
+[documentation](https://tosun-si.github.io/bigtesty/examples/). Each folder has its own `bigtesty.yaml`, its test
+files and a README with the commands.
 
 | Example | What it shows |
 | --- | --- |

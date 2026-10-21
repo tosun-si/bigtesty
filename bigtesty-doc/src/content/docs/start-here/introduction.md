@@ -48,4 +48,4 @@ Then run the tests:
 bigtesty test --project $PROJECT_ID
 ```
 
-Runnable examples, from the basics to a uv project with its CI, are in the [examples](https://github.com/tosun-si/bigtesty/tree/main/examples) folder.
+Runnable examples, from the basics to a uv project with its CI and the production SQL, are listed in [Examples](/bigtesty/examples/).
