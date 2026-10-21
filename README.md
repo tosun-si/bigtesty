@@ -12,6 +12,9 @@ infrastructure.
 
 **Documentation: [tosun-si.github.io/bigtesty](https://tosun-si.github.io/bigtesty/)**
 
+The story of BigTesty 1.x, and how it tests the production SQL as is:
+[Don't mock BigQuery, test on BigQuery](https://medium.com/@mazlum.tosun/dont-mock-bigquery-test-on-bigquery-the-rewrite-of-bigtesty-e3fdb0bbbb57).
+
 - **The real BigQuery engine**, no emulator: the SQL behaves exactly as in production.
 - **Given / When / Then** test files in YAML or JSON: load test data, run any SQL (queries, DML, `MERGE`,
   scripts, procedures), then assert on query results or table contents.

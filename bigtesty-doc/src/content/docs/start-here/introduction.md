@@ -17,6 +17,9 @@ infrastructure.
 
 ![BigTesty architecture](../../../assets/bigtesty_architecture.png)
 
+The story of BigTesty 1.x, and how it tests the production SQL as is:
+[Don't mock BigQuery, test on BigQuery](https://medium.com/@mazlum.tosun/dont-mock-bigquery-test-on-bigquery-the-rewrite-of-bigtesty-e3fdb0bbbb57).
+
 ## Quick start
 
 ```bash
