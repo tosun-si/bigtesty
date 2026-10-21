@@ -65,6 +65,7 @@ export default defineConfig({
             },
           ],
         },
+        { label: 'Examples', slug: 'examples' },
       ],
     }),
   ],
