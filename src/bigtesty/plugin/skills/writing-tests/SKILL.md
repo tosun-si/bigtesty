@@ -86,6 +86,7 @@ At least one of `expected` / `expected_file`, `row_count`, `functions` per `then
 | `compare_columns` | `all` | `expected_only` to check a few columns of a wide result |
 | `ignore_columns` | `[]` | non-deterministic columns: `CURRENT_TIMESTAMP()`, `GENERATE_UUID()` |
 | `float_tolerance` | | floats computed by aggregations |
+| `key_columns` | `[]` | the columns identifying a row (`[featureName, day]`): rows matched on them, duplicated keys reported |
 
 The comparison is **typed** with the result schema: `"2026-01-11 10:00:00"` equals `"2026-01-11T12:00:00+02:00"`
 for a `TIMESTAMP`, `"1.50"` equals `1.5` for a `NUMERIC`, `RECORD` and `REPEATED` are compared recursively. Don't

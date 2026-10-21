@@ -38,6 +38,18 @@ def test_given_correct_then_when_validate_then_no_error(then):
         ({"actual": "SELECT 1", "expected": []}, "Extra inputs are not permitted"),
         # --- Case 6: table without dataset ---
         ({"table": "job_failure", "row_count": 0}, "String should match pattern"),
+        # --- Case 7: key columns without expected rows ---
+        ({"query": "SELECT 1", "row_count": 1, "key_columns": ["k"]}, "key_columns needs expected rows"),
+        # --- Case 8: key columns with the order compared ---
+        (
+            {"query": "SELECT 1", "expected": [], "key_columns": ["k"], "ignore_order": False},
+            "can't be combined with ignore_order: false",
+        ),
+        # --- Case 9: ignored key column ---
+        (
+            {"query": "SELECT 1", "expected": [], "key_columns": ["k"], "ignore_columns": ["k"]},
+            "key columns can't be ignored: k",
+        ),
     ],
 )
 def test_given_invalid_then_when_validate_then_raises_error_with_message(then, error_message):

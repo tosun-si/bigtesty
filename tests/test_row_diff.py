@@ -76,3 +76,51 @@ def test_given_many_missing_rows_when_diff_then_the_first_ones_and_a_count():
 
     # THEN
     assert (len(lines), lines[-1]) == (MAX_SHOWN_ROWS + 2, "  ... and 5 more")
+
+
+def test_given_key_columns_when_diff_then_rows_matched_on_their_key():
+    # GIVEN
+    expected = [{"featureName": "f1", "env": "prod", "n": 2}, {"featureName": "f2", "env": "prod", "n": 1}]
+    actual = [{"featureName": "f1", "env": "test", "n": 1}, {"featureName": "f2", "env": "prod", "n": 1}]
+
+    # WHEN
+    message = format_row_diff(
+        diff_rows(expected, actual, True, None, key_columns=["featureName"]), len(expected), len(actual)
+    )
+
+    # THEN
+    assert message == (
+        'expected 2 rows, got 2: 1 changed\n  changed     {featureName: "f1"}  env: "prod" → "test", n: 2 → 1'
+    )
+
+
+@pytest.mark.parametrize(
+    ("actual", "expected_message"),
+    [
+        # --- Case 1: key found twice ---
+        (
+            [{"k": "a", "n": 1}, {"k": "a", "n": 1}, {"k": "b", "n": 2}],
+            'expected 2 rows, got 3: 1 duplicated\n  duplicated  {k: "a", n: 1}',
+        ),
+        # --- Case 2: missing and unexpected keys ---
+        (
+            [{"k": "a", "n": 1}, {"k": "c", "n": 2}],
+            'expected 2 rows, got 2: 1 missing, 1 unexpected\n  missing     {k: "b", n: 2}\n'
+            '  unexpected  {k: "c", n: 2}',
+        ),
+    ],
+)
+def test_given_key_columns_when_diff_then_duplicated_missing_and_unexpected_keys(actual, expected_message):
+    # GIVEN
+    expected = [{"k": "a", "n": 1}, {"k": "b", "n": 2}]
+
+    # WHEN
+    message = format_row_diff(diff_rows(expected, actual, True, None, key_columns=["k"]), len(expected), len(actual))
+
+    # THEN
+    assert message == expected_message
+
+
+def test_given_key_columns_and_float_tolerance_when_diff_then_no_diff():
+    # WHEN / THEN
+    assert not diff_rows([{"k": "a", "x": 1.0}], [{"k": "a", "x": 1.05}], True, 0.1, key_columns=["k"])

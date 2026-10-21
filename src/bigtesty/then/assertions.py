@@ -42,7 +42,7 @@ def check_rows(then: ThenPlan, actual: list[Row], expected: list[Row]) -> CheckR
             for row in rows
         ]
 
-    diff = diff_rows(prepare(expected), prepare(actual), then.ignore_order, then.float_tolerance)
+    diff = diff_rows(prepare(expected), prepare(actual), then.ignore_order, then.float_tolerance, then.key_columns)
 
     return CheckResult(
         check="rows",

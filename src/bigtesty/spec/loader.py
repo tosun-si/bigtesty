@@ -306,8 +306,12 @@ def to_then_plan(
         else None
     )
 
+    name = then.name or f"then[{then_index}]"
+    if expected is not None:
+        _check_key_columns_in_expected(f"{scenario_id} {name}", then.key_columns, expected)
+
     return ThenPlan(
-        name=then.name or f"then[{then_index}]",
+        name=name,
         query=query,
         expected=tuple(expected) if expected is not None else None,
         row_count=then.row_count,
@@ -318,7 +322,15 @@ def to_then_plan(
         float_tolerance=then.float_tolerance,
         expected_file=expected_file,
         query_file=spec_dir / then.query_file if then.query_file is not None else None,
+        key_columns=tuple(then.key_columns),
     )
+
+
+def _check_key_columns_in_expected(step: str, key_columns: list[str], expected: list[Any]) -> None:
+    for index, row in enumerate(expected):
+        missing = [column for column in key_columns if not isinstance(row, dict) or column not in row]
+        if missing:
+            raise SpecError(f"{step}: the expected row {index} has no key column {', '.join(missing)}")
 
 
 def _check_configured_dataset(scenario_id: str, dataset_id: str, dataset_ids: set[str]) -> None:

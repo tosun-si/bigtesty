@@ -188,6 +188,11 @@ class ThenSpec(SpecModel):
         "all", description="expected_only compares only the columns present in the expected rows."
     )
     float_tolerance: float | None = Field(None, ge=0)
+    key_columns: list[str] = Field(
+        [],
+        description="Columns identifying a row: the expected and actual rows are matched on them, a changed row is "
+        "reported with its key and a key found more times than expected as duplicated.",
+    )
     parameters: Parameters = Field({}, description=PARAMETERS_DESCRIPTION + " Added to the scenario parameters.")
 
     @model_validator(mode="after")
@@ -197,6 +202,19 @@ class ThenSpec(SpecModel):
 
         if self.expected is None and self.expected_file is None and self.row_count is None and not self.functions:
             raise ValueError("at least one assertion is required: expected, expected_file, row_count or functions")
+        return self
+
+    @model_validator(mode="after")
+    def _check_key_columns(self) -> Self:
+        if not self.key_columns:
+            return self
+        if self.expected is None and self.expected_file is None:
+            raise ValueError("key_columns needs expected rows: expected or expected_file")
+        if not self.ignore_order:
+            raise ValueError("key_columns matches the rows by key, it can't be combined with ignore_order: false")
+        ignored = [column for column in self.key_columns if column in self.ignore_columns]
+        if ignored:
+            raise ValueError(f"key columns can't be ignored: {', '.join(ignored)}")
         return self
 
 

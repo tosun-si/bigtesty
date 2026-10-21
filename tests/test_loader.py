@@ -67,6 +67,11 @@ def test_given_cli_project_and_location_when_build_run_plan_then_they_override_t
         ),
         # --- Case 3: invalid test file ---
         ("scenarios: [{ name: s }]", "Invalid file"),
+        # --- Case 4: expected row without a key column ---
+        (
+            "scenarios: [{ name: s, then: [{ name: t, query: SELECT 1, key_columns: [k], expected: [{ n: 1 }] }] }]",
+            "s t: the expected row 0 has no key column k",
+        ),
     ],
 )
 def test_given_invalid_test_file_when_build_run_plan_then_raises_error_with_message(tmp_path, test_file, error_message):
