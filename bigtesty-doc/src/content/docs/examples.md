@@ -42,4 +42,10 @@ run: nothing to clean up.
 - **BigTesty locked like any dev dependency.** `uv add --dev bigtesty`, and the CI runs `uv run pytest` with the
   version of `uv.lock` ([04](https://github.com/tosun-si/bigtesty/tree/main/examples/04-uv-project)).
 
-For the tests of another language (Java and JUnit 5, Go...), see [Other languages](/bigtesty/running-tests/other-languages/).
+## Java and JUnit 5
+
+The [`bigtesty-java-example`](https://github.com/tosun-si/bigtesty-java-example) repository, separate to keep Maven
+out of this one, tests Java code writing to BigQuery with JUnit 5: an extension creating the infra before all the
+tests of a class and destroying it after them, with the CLI or the Docker image run with Testcontainers
+(`mvn test -Dbigtesty.runner=docker`). See [Other languages](/bigtesty/running-tests/other-languages/) for the CLI
+contract.
