@@ -5,7 +5,18 @@ build-backend = "uv_build"
 [project]
 name = "bigtesty"
 version = "1.3.0"
-description = "BigTesty is an integration testing framework for BigQuery"
+description = "Integration tests for BigQuery SQL, on the real engine and ephemeral datasets: YAML, pytest and any language."
+keywords = [
+    "bigquery",
+    "google-cloud",
+    "gcp",
+    "testing",
+    "integration-testing",
+    "sql",
+    "pytest",
+    "data-engineering",
+    "data-quality",
+]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
