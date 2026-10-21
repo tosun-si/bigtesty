@@ -1,10 +1,11 @@
 """
-Diff of the expected and actual rows, by row instead of by position: the changed rows (matched on their equal
-columns), the missing rows and the unexpected rows.
+Diff of the expected and actual rows, by row instead of by position: the changed rows (matched on their key columns,
+or on their equal columns without key), the missing rows and the unexpected rows.
 """
 
 import json
-from collections import Counter
+from collections import Counter, defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -28,6 +29,8 @@ class ChangedRow:
     changes: tuple[tuple[str, Any, Any], ...]
     # The position of the row when the order is compared.
     position: int | None = None
+    # The key columns of the row, when the rows are matched by key.
+    key: Row | None = None
 
 
 @dataclass(frozen=True)
@@ -35,14 +38,22 @@ class RowDiff:
     changed: tuple[ChangedRow, ...] = ()
     missing: tuple[Row, ...] = ()
     unexpected: tuple[Row, ...] = ()
+    # Actual rows whose key is found more times than expected (key_columns).
+    duplicated: tuple[Row, ...] = ()
     # Same rows, in another order (ignore_order: false).
     order_only: bool = False
 
     def __bool__(self) -> bool:
-        return bool(self.changed or self.missing or self.unexpected or self.order_only)
+        return bool(self.changed or self.missing or self.unexpected or self.duplicated or self.order_only)
 
 
-def diff_rows(expected: list[Row], actual: list[Row], ignore_order: bool, float_tolerance: float | None) -> RowDiff:
+def diff_rows(
+    expected: list[Row],
+    actual: list[Row],
+    ignore_order: bool,
+    float_tolerance: float | None,
+    key_columns: Sequence[str] = (),
+) -> RowDiff:
     def same(left: Any, right: Any) -> bool:
         # DeepDiff ignores math_epsilon with ignore_order on nested objects: the order is only ignored inside the
         # repeated fields, the rows are compared one by one.
@@ -56,6 +67,9 @@ def diff_rows(expected: list[Row], actual: list[Row], ignore_order: bool, float_
 
     if not ignore_order:
         return _diff_by_position(expected, actual, same)
+
+    if key_columns:
+        return _diff_by_key(expected, actual, key_columns, same)
 
     missing, unexpected = _remove_equal_rows(expected, actual, same)
     if not missing and not unexpected:
@@ -78,7 +92,12 @@ def diff_rows(expected: list[Row], actual: list[Row], ignore_order: bool, float_
 def format_row_diff(diff: RowDiff, expected_count: int, actual_count: int) -> str:
     counts = [
         f"{len(rows)} {kind}"
-        for kind, rows in (("changed", diff.changed), ("missing", diff.missing), ("unexpected", diff.unexpected))
+        for kind, rows in (
+            ("changed", diff.changed),
+            ("missing", diff.missing),
+            ("unexpected", diff.unexpected),
+            ("duplicated", diff.duplicated),
+        )
         if rows
     ]
     header = f"expected {expected_count} rows, got {actual_count}" + (f": {', '.join(counts)}" if counts else "")
@@ -91,6 +110,7 @@ def format_row_diff(diff: RowDiff, expected_count: int, actual_count: int) -> st
         *_shown(diff.changed, lambda row: f"  changed     {_format_changed(row)}"),
         *_shown(diff.missing, lambda row: f"  missing     {format_row(row)}"),
         *_shown(diff.unexpected, lambda row: f"  unexpected  {format_row(row)}"),
+        *_shown(diff.duplicated, lambda row: f"  duplicated  {format_row(row)}"),
     ]
     return "\n".join(lines)
 
@@ -118,6 +138,42 @@ def _diff_by_position(expected: list[Row], actual: list[Row], same: Any) -> RowD
         changed=changed,
         missing=tuple(expected[len(actual) :]),
         unexpected=tuple(actual[len(expected) :]),
+    )
+
+
+def _diff_by_key(expected: list[Row], actual: list[Row], key_columns: Sequence[str], same: Any) -> RowDiff:
+    """The rows of the same key are compared together: changed when their values differ, duplicated when the key is
+    found more times than expected."""
+
+    def key_of(row: Row) -> Row:
+        return {column: row.get(column, ABSENT) for column in key_columns}
+
+    actual_by_key: dict[str, list[Row]] = defaultdict(list)
+    for row in actual:
+        actual_by_key[_key(key_of(row))].append(row)
+
+    changed: list[ChangedRow] = []
+    missing: list[Row] = []
+    duplicated: list[Row] = []
+
+    for expected_row in expected:
+        candidates = actual_by_key.get(_key(key_of(expected_row)), [])
+        match = next((row for row in candidates if same(expected_row, row)), None)
+        if match is None and candidates:
+            match = candidates[0]
+            changed.append(_changed_row(expected_row, match, same, key=key_of(expected_row)))
+        if match is None:
+            missing.append(expected_row)
+        else:
+            candidates.remove(match)
+
+    expected_keys = {_key(key_of(row)) for row in expected}
+    unexpected: list[Row] = []
+    for key, rows in actual_by_key.items():
+        (duplicated if key in expected_keys else unexpected).extend(rows)
+
+    return RowDiff(
+        changed=tuple(changed), missing=tuple(missing), unexpected=tuple(unexpected), duplicated=tuple(duplicated)
     )
 
 
@@ -180,14 +236,16 @@ def _is_identifier(value: Any) -> bool:
     return isinstance(value, str)
 
 
-def _changed_row(expected: Row, actual: Row, same: Any, position: int | None = None) -> ChangedRow:
+def _changed_row(
+    expected: Row, actual: Row, same: Any, position: int | None = None, key: Row | None = None
+) -> ChangedRow:
     columns = list(expected) + [column for column in actual if column not in expected]
     changes = tuple(
         (column, expected.get(column, ABSENT), actual.get(column, ABSENT))
         for column in columns
         if column not in expected or column not in actual or not same(expected[column], actual[column])
     )
-    return ChangedRow(expected, actual, changes, position)
+    return ChangedRow(expected, actual, changes, position, key)
 
 
 def _format_changed(row: ChangedRow) -> str:
@@ -196,6 +254,8 @@ def _format_changed(row: ChangedRow) -> str:
     where = (
         f"row {row.position}"
         if row.position is not None
+        else format_row(row.key)
+        if row.key is not None
         else format_row(dict(list(identity.items())[:3]))
         if identity
         else "row"

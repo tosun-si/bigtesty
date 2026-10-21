@@ -67,6 +67,8 @@ class ThenPlan:
     query_file: Path | None = None
     # The BigQuery query parameters of the query: the scenario ones and the then ones.
     parameters: tuple[QueryParameter, ...] = ()
+    # The columns identifying a row, to match the expected and actual rows.
+    key_columns: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

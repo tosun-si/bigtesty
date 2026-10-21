@@ -71,8 +71,37 @@ One or several assertions on the result of `query` (inline SQL), `query_file` or
 | `compare_columns` | `all`      | `expected_only` compares only the columns present in the expected rows.     |
 | `ignore_columns`  | `[]`       | Columns excluded from the comparison.                                       |
 | `float_tolerance` |            | Absolute tolerance for the float comparison.                                |
+| `key_columns`     | `[]`       | Columns identifying a row, to match the expected and actual rows.           |
 
 `expected`, `row_count` and `functions` can be combined, at least one of them is required.
+
+### Key columns
+
+Without key, a changed row is matched with an expected row when at least half of their columns are equal: when more
+columns change, it is reported as one missing and one unexpected row. Declare the columns identifying a row to match
+the rows on them: a changed row is reported with its key, and a key found more times than expected as duplicated (a
+join or an `INSERT` run twice).
+
+```yaml
+then:
+  - name: daily_failures
+    table: monitoring.daily_failures
+    key_columns: [day, featureName]
+    expected:
+      - { day: "2026-01-10", featureName: featurePSG, failuresCount: 2, env: test }
+      - { day: "2026-01-11", featureName: featureOM, failuresCount: 1, env: test }
+      - { day: "2026-01-12", featureName: featureOM, failuresCount: 1, env: test }
+```
+
+```text
+daily_failures / rows:
+    expected 3 rows, got 3: 1 changed, 1 missing, 1 duplicated
+      changed     {day: "2026-01-10", featureName: "featurePSG"}  failuresCount: 2 → 3, env: "test" → "prod"
+      missing     {day: "2026-01-12", featureName: "featureOM", failuresCount: 1, env: "test"}
+      duplicated  {day: "2026-01-10", featureName: "featurePSG", failuresCount: 3, env: "prod"}
+```
+
+The expected rows must contain the key columns. `key_columns` can't be combined with `ignore_order: false`.
 
 ### Typed comparison
 

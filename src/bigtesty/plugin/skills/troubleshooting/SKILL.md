@@ -17,8 +17,8 @@ which would also delete the datasets of the runs in progress of the other develo
 
 ## Exit code 1: an assertion failed
 
-The report shows, per `then` block, the changed rows (matched on their equal columns), the missing and the
-unexpected rows:
+The report shows, per `then` block, the changed rows (matched on their `key_columns`, or on their equal columns),
+the missing and the unexpected rows:
 
 ```text
 failures_per_feature / rows:
@@ -33,6 +33,8 @@ rerun: bigtesty test -k "monitoring/failures.bigtesty.yaml::wrong_value_and_miss
 - `expected N rows, got M`: a join, a filter or a `given` row is missing. Query the kept datasets.
 - Rows in another order with `ignore_order: false`: add the `ORDER BY` to the query.
 - Extra columns: `compare_columns: expected_only`. Non-deterministic columns: `ignore_columns`.
+- A changed row shown as one missing and one unexpected row: set the `key_columns` of the result. `duplicated`
+  rows (with `key_columns`): the SQL writes a key twice, e.g. a join or an `INSERT` run twice.
 - Floats: `float_tolerance`. Dates and numerics are compared typed: a format difference is not a failure.
 - After an intended change of the result, `bigtesty test --update` rewrites the `expected_file`s; review the diff.
 
