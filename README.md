@@ -319,6 +319,18 @@ The tests of the other languages (Java / JUnit 5, Go...) get the same infra with
 in their setup and `bigtesty infra destroy` in their teardown, with the CLI or the Docker image, Testcontainers
 included: see the [Other languages](https://tosun-si.github.io/bigtesty/running-tests/other-languages/) page.
 
+## Run from a program
+
+`bigtesty.api` lists the scenarios and runs one or all of them, e.g. from a web app, with the JSON report as a dict:
+
+```python
+from bigtesty.api import Project
+
+project = Project.load("bigtesty.yaml", project="my-project")
+report = project.run([project.scenarios[0].id])   # or project.run() for all of them
+report.passed, report.to_dict()
+```
+
 ## Run with Docker
 
 ```bash

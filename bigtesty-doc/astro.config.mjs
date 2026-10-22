@@ -58,6 +58,7 @@ export default defineConfig({
             'running-tests/cli',
             'running-tests/pytest',
             'running-tests/python-tests',
+            'running-tests/python-api',
             'running-tests/other-languages',
             {
               label: 'CI',

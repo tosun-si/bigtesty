@@ -83,6 +83,7 @@ class ScenarioPlan:
     when_file: Path | None = None
     # The BigQuery query parameters of the when SQL: the scenario ones and the when ones.
     when_parameters: tuple[QueryParameter, ...] = ()
+    description: str | None = None
 
 
 @dataclass(frozen=True)
