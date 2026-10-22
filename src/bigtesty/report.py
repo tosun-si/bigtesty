@@ -58,6 +58,12 @@ class RunReport:
     def bytes_billed(self) -> int:
         return sum(report.bytes_billed for report in self.scenario_reports)
 
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON report of `bigtesty test --report-json`."""
+        from bigtesty.json_report import json_report  # noqa: PLC0415, json_report imports this module
+
+        return json_report(self)
+
     @property
     def updated_files(self) -> tuple[Path, ...]:
         return tuple(

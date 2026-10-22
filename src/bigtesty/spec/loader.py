@@ -246,6 +246,7 @@ def to_scenario_plan(
         scenario_id=scenario_id,
         index=index,
         name=scenario.name,
+        description=scenario.description,
         given=tuple(to_given_plan(scenario_id, spec_dir, given, dataset_ids) for given in scenario.given),
         when_sql=(
             None

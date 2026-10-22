@@ -83,3 +83,17 @@ https://tosun-si.github.io/bigtesty/running-tests/other-languages/.
 
 A killed test run leaves the infra: its tables expire after `table_expiration_hours` and `bigtesty gc` deletes the
 datasets.
+
+## Run the YAML scenarios from a program
+
+To list and run the scenarios of the test files from a program (a web app, a scheduler), use `bigtesty.api`, not a
+subprocess parsing the text report:
+
+```python
+from bigtesty.api import Project
+
+project = Project.load("bigtesty.yaml", project="my-project")  # validated once, no BigQuery call
+ids = [scenario.id for scenario in project.scenarios]
+report = project.run(ids[:1])  # exact IDs, or run() for all: a new run with its own datasets
+report.to_dict()  # the JSON report: status, structured diffs, failed step
+```
