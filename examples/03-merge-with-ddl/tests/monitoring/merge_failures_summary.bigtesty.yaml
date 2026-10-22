@@ -18,6 +18,7 @@ scenarios:
     then:
       - name: summary_is_upserted
         table: monitoring.job_failure_summary
+        key_columns: [featureName]
         expected:
           - { featureName: featurePSG, failuresCount: 7, lastFailureDate: "2026-01-11 10:00:00" }
           - { featureName: featureOM, failuresCount: 1, lastFailureDate: "2026-01-12 10:00:00" }
