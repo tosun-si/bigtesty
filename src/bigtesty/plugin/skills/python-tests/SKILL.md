@@ -92,8 +92,8 @@ subprocess parsing the text report:
 ```python
 from bigtesty.api import Project
 
-project = Project.load("bigtesty.yaml", project="my-project")   # validated once, no BigQuery call
+project = Project.load("bigtesty.yaml", project="my-project")  # validated once, no BigQuery call
 ids = [scenario.id for scenario in project.scenarios]
-report = project.run(ids[:1])     # exact IDs, or run() for all: a new run with its own datasets
-report.to_dict()                  # the JSON report: status, structured diffs, failed step
+report = project.run(ids[:1])  # exact IDs, or run() for all: a new run with its own datasets
+report.to_dict()  # the JSON report: status, structured diffs, failed step
 ```
