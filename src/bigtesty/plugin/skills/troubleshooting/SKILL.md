@@ -11,6 +11,9 @@ Start from the exit code and the first error line, then reproduce on the failing
 bigtesty test -k <scenario> --cleanup never -v     # -v shows the executed (rewritten) SQL
 ```
 
+To read the failures as data, add `--report-json report.json`: per scenario the `status`, the changed, missing,
+unexpected and duplicated rows of each check, and for a failed step its file, job, messages, position and executed SQL.
+
 `--cleanup never` keeps the datasets (`<dataset>_<run_id>_<index>`, the run ID is in the report) to query them in
 BigQuery. Delete them after with `bigtesty infra destroy --run-id <run_id>` (not `bigtesty gc --older-than-hours 0`,
 which would also delete the datasets of the runs in progress of the other developers and pipelines).
