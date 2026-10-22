@@ -235,6 +235,8 @@ bigtesty test                      # run all the scenarios
 bigtesty test -k merge             # only the scenarios whose ID contains "merge"
 bigtesty test --cleanup never -v   # keep the datasets, show the executed SQL
 bigtesty test --update            # rewrite the expected files that don't match from the actual rows
+bigtesty test --junit-xml report.xml    # JUnit XML report, for the CI tools
+bigtesty test --report-json report.json # JSON report with the structured failures, for the programs
 bigtesty validate                  # validate the config and test files, no call to BigQuery
 bigtesty gc --older-than-hours 6   # delete the datasets left by killed runs
 bigtesty infra create -o json      # create the infra for the tests of another language
