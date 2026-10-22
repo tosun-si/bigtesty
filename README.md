@@ -168,6 +168,7 @@ Options of the `then` blocks:
 | `compare_columns`   | `all`   | `expected_only` compares only the columns present in the expected rows.     |
 | `ignore_columns`    | `[]`    | Columns excluded from the comparison.                                       |
 | `float_tolerance`   |         | Absolute tolerance for the float comparison.                                |
+| `key_columns`       | `[]`    | Columns identifying a row: rows matched on them, duplicated keys reported.  |
 
 The actual and expected values are compared **with the types of the query result**: a `TIMESTAMP` written
 `"2026-01-11 10:00:00"`, `"2026-01-11T10:00:00Z"` or `"2026-01-11T12:00:00+02:00"` is the same value, a `NUMERIC`

@@ -13,7 +13,8 @@ tests/monitoring/
 
 - `given` loads the failures and an existing summary row.
 - `when` runs the `MERGE` script. It could be any script: DML, `CALL`, `BEGIN...END`.
-- `then` checks the whole summary table, and that no feature is duplicated with a query and a `row_count: 0`.
+- `then` checks the whole summary table, with `key_columns: [featureName]`: a wrong count is reported on its
+  feature, a feature written twice as duplicated. A query with a `row_count: 0` checks the duplicates too.
 
 The SQL is the production SQL: `monitoring.job_failure_summary` is rewritten to the isolated dataset of the scenario.
 

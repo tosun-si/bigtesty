@@ -8,7 +8,7 @@ files and a README with the commands.
 | --- | --- |
 | [`01-queries`](01-queries/) | Test data from a file or inline, a query file or an inline query, expected rows from a file or inline, `compare_columns: expected_only` |
 | [`02-assertion-functions`](02-assertion-functions/) | Python assertion functions on the query result, a row count, an inline table schema |
-| [`03-merge-with-ddl`](03-merge-with-ddl/) | A `when` step running a `MERGE` script, a view created with a DDL file, several `then` assertions on a table and a query |
+| [`03-merge-with-ddl`](03-merge-with-ddl/) | A `when` step running a `MERGE` script, a view created with a DDL file, several `then` assertions on a table and a query, `key_columns` |
 | [`04-uv-project`](04-uv-project/) | A project with BigTesty as a uv dev dependency from PyPI, tests run with pytest, CI with GitHub Actions, GitLab CI and Cloud Build |
 | [`05-python-tests`](05-python-tests/) | Python code writing to BigQuery tested with pytest and unittest: one infra created and deleted once for several tests |
 | [`06-production-sql`](06-production-sql/) | The production SQL tested as is from `src/`: a Jinja template rendered by the rendering code of the production (`sql_renderer`, `vars`), BigQuery query parameters |
