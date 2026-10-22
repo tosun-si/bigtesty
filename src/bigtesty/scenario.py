@@ -16,7 +16,7 @@ from bigtesty.plan import GivenPlan, QueryParameter, Row, RunPlan, ScenarioPlan,
 from bigtesty.report import CheckResult, ScenarioReport, ThenReport
 from bigtesty.spec.files import write_data_file
 from bigtesty.sql_rewrite import rewrite_datasets
-from bigtesty.step_error import StepError, format_step_error
+from bigtesty.step_error import StepError, format_step_error, step_error_details
 from bigtesty.then.assertions import check_then
 from bigtesty.then.normalization import normalize_rows
 from bigtesty.then.snapshot import snapshot_rows
@@ -72,6 +72,9 @@ def run_scenario(context: RunContext, scenario: ScenarioPlan) -> ScenarioReport:
             time.perf_counter() - start,
             error=format_step_error(e) if isinstance(e, StepError) else f"{type(e).__name__}: {e}",
             bytes_billed=sum(bytes_billed),
+            error_details=step_error_details(e)
+            if isinstance(e, StepError)
+            else {"step": None, "type": type(e).__name__, "messages": [str(e)]},
         )
 
     logger.debug("%s %s", "PASSED" if report.passed else "FAILED", scenario.scenario_id)

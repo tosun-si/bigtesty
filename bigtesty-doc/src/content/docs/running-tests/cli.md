@@ -28,6 +28,7 @@ bigtesty --version                 # or bigtesty version
 | `--cleanup`       |                                            | `always`, `on_success` or `never`, overrides the config.                  |
 | `--update`        |                                            | Rewrite the [expected files](/bigtesty/writing-tests/test-files/#update-the-expected-files) that don't match, create the missing ones. |
 | `--junit-xml`     |                                            | Write a JUnit XML report, for the CI tools (GitLab, GitHub Actions...).   |
+| `--report-json`   |                                            | Write a [JSON report](#json-report), with the structured failures.        |
 | `--verbose`, `-v` |                                            | Show the executed SQL and the debug logs.                                 |
 
 The report shows the duration and the bytes billed of each scenario, and the total bytes billed of the run. The
@@ -69,7 +70,76 @@ rerun: bigtesty test -k "monitoring/failures.bigtesty.yaml::sql_error"
 - The progress of the scenarios is logged with `-v` only: the report lists each scenario once.
 
 With `--junit-xml`, each scenario is a test case (`classname` the test file, `name` the scenario) with a
-`bytes_billed` property, a `failure` for a failed assertion and an `error` for a failed step.
+`bytes_billed` property, a `failure` for a failed assertion and an `error` for a failed step. For an HTML page, convert
+it with any JUnit to HTML tool, e.g. `uvx junit2html report.xml report.html`.
+
+### JSON report
+
+`--report-json` writes the results for the programs: a web app showing the scenarios, a dashboard of the bytes
+billed... The failures are structured, with the text of the report too:
+
+```json
+{
+  "format_version": 1,
+  "run_id": "izwevr",
+  "passed": false,
+  "summary": { "scenarios": 3, "passed": 1, "failed": 1, "errors": 1 },
+  "bytes_billed": 0,
+  "duration_seconds": 8.753,
+  "scenarios": [
+    {
+      "id": "monitoring/keys.bigtesty.yaml::changed_and_duplicated_keys",
+      "file": "monitoring/keys.bigtesty.yaml",
+      "name": "changed_and_duplicated_keys",
+      "status": "failed",
+      "duration_seconds": 5.05,
+      "bytes_billed": 0,
+      "error": null,
+      "then": [
+        {
+          "name": "daily_failures",
+          "passed": false,
+          "updated_file": null,
+          "checks": [
+            {
+              "check": "rows",
+              "passed": false,
+              "message": "expected 3 rows, got 3: 1 changed, 1 missing, 1 duplicated\n...",
+              "details": {
+                "expected_count": 3,
+                "actual_count": 3,
+                "order_only": false,
+                "changed": [
+                  {
+                    "key": { "day": "2026-01-10", "featureName": "featurePSG" },
+                    "position": null,
+                    "expected": { "day": "2026-01-10", "featureName": "featurePSG", "failuresCount": 2, "env": "test" },
+                    "actual": { "day": "2026-01-10", "featureName": "featurePSG", "failuresCount": 3, "env": "prod" },
+                    "changes": [
+                      { "column": "failuresCount", "expected": 2, "actual": 3 },
+                      { "column": "env", "expected": "test", "actual": "prod" }
+                    ]
+                  }
+                ],
+                "missing": [{ "day": "2026-01-12", "featureName": "featureOM", "failuresCount": 1, "env": "test" }],
+                "unexpected": [],
+                "duplicated": [{ "day": "2026-01-10", "featureName": "featurePSG", "failuresCount": 3, "env": "prod" }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+- `status` is `passed`, `failed` (an assertion) or `error` (a failed step).
+- The `details` of a check: the `changed`, `missing`, `unexpected` and `duplicated` rows for `rows`, the expected and
+  actual counts for `row_count`. A column absent from one of the rows has no `expected` or `actual` in its change.
+- The `error` of a failed step: `step`, `source` (its SQL file), `type`, `messages`, `job_id`, the `position` in the
+  executed `sql` (`{"line": 2, "column": 7}`) and the `text` of the report.
+- `format_version` changes only on a breaking change of the format: new fields can be added.
 
 The exit code is `0` when all the scenarios pass, `1` when a scenario fails and `2` for an invalid config or test
 file.

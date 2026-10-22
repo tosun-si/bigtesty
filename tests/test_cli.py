@@ -100,3 +100,22 @@ def test_given_created_infra_when_infra_destroy_then_its_datasets_deleted(tmp_pa
         {"run_id": run_id, "deleted_datasets": 1},
         [f"test-project.monitoring_{run_id}_0"],
     )
+
+
+def test_given_report_json_option_when_test_then_json_report_written(tmp_path, monkeypatch, fake_bigquery):
+    # GIVEN
+    from helpers import write_project
+
+    write_project(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    # WHEN
+    result = CliRunner().invoke(app, ["test", "--report-json", "reports/bigtesty.json"])
+
+    # THEN
+    report = json.loads((tmp_path / "reports/bigtesty.json").read_text())
+    assert (result.exit_code, report["summary"]["scenarios"], [s["name"] for s in report["scenarios"]]) == (
+        1,
+        2,
+        ["nominal", "other"],
+    )

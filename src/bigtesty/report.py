@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -7,6 +9,8 @@ class CheckResult:
     check: str
     passed: bool
     message: str = ""
+    # The structured result of a failed check (e.g. the changed, missing and unexpected rows), for the JSON report.
+    details: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -29,6 +33,8 @@ class ScenarioReport:
     error: str | None = None
     # Bytes billed by the query jobs of the scenario (DDL, when, then); the load jobs of the given are free.
     bytes_billed: int = 0
+    # The structured error (step, file, job...), for the JSON report.
+    error_details: Mapping[str, Any] | None = None
 
     @property
     def passed(self) -> bool:
