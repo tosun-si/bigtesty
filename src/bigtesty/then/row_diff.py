@@ -115,6 +115,35 @@ def format_row_diff(diff: RowDiff, expected_count: int, actual_count: int) -> st
     return "\n".join(lines)
 
 
+def row_diff_details(diff: RowDiff, expected_count: int, actual_count: int) -> dict[str, Any]:
+    """The diff as data, for the JSON report: all the rows, an absent column is left out of its change."""
+    return {
+        "expected_count": expected_count,
+        "actual_count": actual_count,
+        "order_only": diff.order_only,
+        "changed": [
+            {
+                "key": row.key,
+                "position": row.position,
+                "expected": row.expected,
+                "actual": row.actual,
+                "changes": [
+                    {
+                        "column": column,
+                        **({"expected": expected} if expected is not ABSENT else {}),
+                        **({"actual": actual} if actual is not ABSENT else {}),
+                    }
+                    for column, expected, actual in row.changes
+                ],
+            }
+            for row in diff.changed
+        ],
+        "missing": list(diff.missing),
+        "unexpected": list(diff.unexpected),
+        "duplicated": list(diff.duplicated),
+    }
+
+
 def format_row(row: Row) -> str:
     return "{" + ", ".join(f"{column}: {format_value(value)}" for column, value in row.items()) + "}"
 

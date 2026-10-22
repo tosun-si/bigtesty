@@ -5,6 +5,7 @@ the executed SQL at the position given by BigQuery.
 
 import re
 from pathlib import Path
+from typing import Any
 
 from google.api_core.exceptions import GoogleAPICallError
 
@@ -52,6 +53,21 @@ def format_step_error(error: StepError) -> str:
         lines += ["", *sql_excerpt(error.sql, int(position.group(1)), int(position.group(2)))]
 
     return "\n".join(lines)
+
+
+def step_error_details(error: StepError) -> dict[str, Any]:
+    """The error as data: the step, its SQL file, the BigQuery job, the error messages and the position in the SQL."""
+    messages = _limited(list(dict.fromkeys(error.details))) if error.details else _messages(error.cause)
+    position = _POSITION.search(messages[0])
+    return {
+        "step": error.step,
+        "source": display_path(error.source) if error.source else None,
+        "type": type(error.cause).__name__,
+        "messages": messages,
+        "job_id": error.job_id or _job_id(error.cause),
+        "position": {"line": int(position.group(1)), "column": int(position.group(2))} if position else None,
+        "sql": error.sql,
+    }
 
 
 def sql_excerpt(sql: str, line: int, column: int) -> list[str]:

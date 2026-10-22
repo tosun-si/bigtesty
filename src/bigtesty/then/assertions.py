@@ -5,7 +5,7 @@ from typing import Any
 from bigtesty.functions import load_function
 from bigtesty.plan import AssertionFunctionPlan, Row, ThenPlan
 from bigtesty.report import CheckResult
-from bigtesty.then.row_diff import diff_rows, format_row_diff
+from bigtesty.then.row_diff import diff_rows, format_row_diff, row_diff_details
 
 AssertionFunction = Callable[[list[Row], list[Row]], Any]
 
@@ -24,6 +24,7 @@ def check_row_count(expected_count: int, actual: Sequence[Row]) -> CheckResult:
         check="row_count",
         passed=len(actual) == expected_count,
         message=f"expected {expected_count} rows, got {len(actual)}",
+        details={"expected_count": expected_count, "actual_count": len(actual)},
     )
 
 
@@ -48,6 +49,7 @@ def check_rows(then: ThenPlan, actual: list[Row], expected: list[Row]) -> CheckR
         check="rows",
         passed=not diff,
         message=format_row_diff(diff, len(expected), len(actual)) if diff else "",
+        details=row_diff_details(diff, len(expected), len(actual)) if diff else None,
     )
 
 

@@ -24,6 +24,7 @@ All the pytest features come for free:
 pytest tests -k merge                    # select the scenarios
 pytest tests --lf                        # re-run the last failed scenarios
 pytest tests --junitxml=report.xml       # JUnit XML report for the CI
+pytest tests --html=report.html --self-contained-html   # HTML report, with the pytest-html plugin
 ```
 
 In the JUnit XML report, each test case has a `bytes_billed` property with the bytes billed by its scenario.
