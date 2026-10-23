@@ -12,6 +12,8 @@ description: "Install the BigTesty Python package and authenticate on GCP."
 uv add --dev bigtesty
 # or as a standalone CLI
 uv tool install bigtesty
+# or with pip, in a virtual environment
+pip install bigtesty
 ```
 
 ## Authentication on GCP
